@@ -1,33 +1,18 @@
 package authservice_config
 
 import (
-	"log"
+	"log/slog"
 	"logistics/pkg/lib/logger/slogger"
+	"logistics/pkg/lib/utils"
 	"os"
-
-	"gopkg.in/yaml.v2"
 )
 
-type AuthGRPCServiceConfig struct {
-	Address string `yaml:"auth_grpc_service_address"`
-}
-
-func LoadAuthGRPCServiceConfig(configPath string) (*AuthGRPCServiceConfig, error) {
-	data, err := os.ReadFile(configPath)
+func LoadAuthGRPCServiceConfig(configPath string) (utils.ServiceConfig, error) {
+	serviceConfig, err := utils.LoadServiceConfig(configPath, "DB_WAREHOUSE_SERVICE_PASSWORD")
 	if err != nil {
-		log.Println("Error reading config file", slogger.Err(err))
+		slog.Error("Failed to load auth service configuration", slogger.Err(err))
 		defer os.Exit(1)
-		return nil, err
+		return utils.ServiceConfig{}, err
 	}
-
-	var address AuthGRPCServiceConfig
-	err = yaml.Unmarshal(data, &address)
-	if err != nil {
-		log.Println("Parsing YAML failed", slogger.Err(err))
-		return nil, err
-	}
-
-	return &AuthGRPCServiceConfig{
-		Address: address.Address,
-	}, nil
+	return serviceConfig, nil
 }

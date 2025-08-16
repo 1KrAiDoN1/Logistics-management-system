@@ -1,33 +1,19 @@
 package driverservice_config
 
 import (
-	"log"
+	"log/slog"
 	"logistics/pkg/lib/logger/slogger"
-	"os"
+	"logistics/pkg/lib/utils"
 
-	"gopkg.in/yaml.v2"
+	"os"
 )
 
-type DriverGRPCServiceConfig struct {
-	Address string `yaml:"driver_grpc_service_address"`
-}
-
-func LoadDriverGRPCServiceConfig(configPath string) (*DriverGRPCServiceConfig, error) {
-	data, err := os.ReadFile(configPath)
+func LoadDriverGRPCServiceConfig(configPath string) (utils.ServiceConfig, error) {
+	serviceConfig, err := utils.LoadServiceConfig(configPath, "DB_WAREHOUSE_SERVICE_PASSWORD")
 	if err != nil {
-		log.Println("Error reading config file", slogger.Err(err))
+		slog.Error("Failed to load driver service configuration", slogger.Err(err))
 		defer os.Exit(1)
-		return nil, err
+		return utils.ServiceConfig{}, err
 	}
-
-	var address DriverGRPCServiceConfig
-	err = yaml.Unmarshal(data, &address)
-	if err != nil {
-		log.Println("Parsing YAML failed", slogger.Err(err))
-		return nil, err
-	}
-
-	return &DriverGRPCServiceConfig{
-		Address: address.Address,
-	}, nil
+	return serviceConfig, nil
 }
