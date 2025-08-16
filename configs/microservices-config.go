@@ -7,15 +7,16 @@ import (
 	orderservice_config "logistics/configs/order-service"
 	routeservice_config "logistics/configs/route-service"
 	warehouseservice_config "logistics/configs/warehouse-service"
+	"logistics/pkg/lib/utils"
 )
 
 type MicroservicesConfig struct {
 	ApiGatewayConfig           *apigateway_config.Config
-	AuthGRPCServiceConfig      string
-	OrderGRPCServiceConfig     string
-	DriverGRPCServiceConfig    string
-	WarehouseGRPCServiceConfig string
-	RouteGRPCServiceConfig     string
+	AuthGRPCServiceConfig      utils.ServiceConfig
+	OrderGRPCServiceConfig     utils.ServiceConfig
+	DriverGRPCServiceConfig    utils.ServiceConfig
+	WarehouseGRPCServiceConfig utils.ServiceConfig
+	RouteGRPCServiceConfig     utils.ServiceConfig
 }
 
 func NewMicroservicesConfig() (*MicroservicesConfig, error) {
@@ -52,10 +53,10 @@ func NewMicroservicesConfig() (*MicroservicesConfig, error) {
 
 	return &MicroservicesConfig{
 		ApiGatewayConfig:           apiGatewayConfig,
-		AuthGRPCServiceConfig:      authGRPCServiceConfig.Address,
-		OrderGRPCServiceConfig:     orderGRPCServiceConfig.Address,
-		DriverGRPCServiceConfig:    driverGRPCServiceConfig.Address,
-		WarehouseGRPCServiceConfig: warehouseGRPCServiceConfig.Address,
-		RouteGRPCServiceConfig:     routeGRPCServiceConfig.Address,
+		AuthGRPCServiceConfig:      authGRPCServiceConfig,
+		OrderGRPCServiceConfig:     orderGRPCServiceConfig,
+		DriverGRPCServiceConfig:    driverGRPCServiceConfig,
+		WarehouseGRPCServiceConfig: warehouseGRPCServiceConfig,
+		RouteGRPCServiceConfig:     routeGRPCServiceConfig,
 	}, nil
 }
