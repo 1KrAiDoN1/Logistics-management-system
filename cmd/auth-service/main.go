@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	orderservice_config "logistics/configs/order-service"
+	authservice_config "logistics/configs/auth-service"
 	"logistics/pkg/database/postgres"
 	"logistics/pkg/lib/logger/slogger"
 )
@@ -10,10 +10,10 @@ import (
 func main() {
 	ctx := context.Background()
 	log := slogger.SetupLogger()
-	orderGRPCServiceConfig, err := orderservice_config.LoadOrderGRPCServiceConfig("configs/order-service/order_service_config.yaml")
+	authGRPCServiceConfig, err := authservice_config.LoadAuthGRPCServiceConfig("configs/auth-service/auth_service_config.yaml")
 	if err != nil {
-		log.Error("Failed to load order service configuration", slogger.Err(err))
-		defer panic("Failed to load order service config: " + err.Error())
+		log.Error("Failed to load auth service configuration", slogger.Err(err))
+		defer panic("Failed to load auth service config: " + err.Error())
 	}
 	db, err := postgres.NewDatabase(ctx, "")
 	if err != nil {
@@ -23,5 +23,5 @@ func main() {
 
 	dbpool := db.GetPool()
 	_ = dbpool
-	log.Info("Order service configuration loaded successfully", "address", orderGRPCServiceConfig.Address)
+	log.Info("Auth service configuration loaded successfully", "address", authGRPCServiceConfig.Address)
 }
