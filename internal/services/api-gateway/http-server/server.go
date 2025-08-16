@@ -34,27 +34,27 @@ type Server struct {
 func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesConfig) *Server {
 	router := gin.Default()
 
-	authGRPCConn, err := grpc.NewClient(microservices_config.AuthGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	authGRPCConn, err := grpc.NewClient(microservices_config.AuthGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for auth service", slogger.Err(err))
 		return nil
 	}
-	driverGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	driverGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for driver service", slogger.Err(err))
 		return nil
 	}
-	orderGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	orderGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for order service", slogger.Err(err))
 		return nil
 	}
-	routeGRPCConn, err := grpc.NewClient(microservices_config.RouteGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	routeGRPCConn, err := grpc.NewClient(microservices_config.RouteGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for route service", slogger.Err(err))
 		return nil
 	}
-	warehouseGRPCConn, err := grpc.NewClient(microservices_config.WarehouseGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	warehouseGRPCConn, err := grpc.NewClient(microservices_config.WarehouseGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for warehouse service", slogger.Err(err))
 		return nil
