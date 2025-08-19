@@ -1,7 +1,7 @@
-address: "0.0.0.0:40001"
+address: "40001"
 database:
   driver: postgres
   host: localhost 
   port: 5432 
-  user: driver_user
-  dbname: driver_db
+  user: postgres
+  dbname: grpcauth
