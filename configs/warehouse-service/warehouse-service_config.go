@@ -1,34 +1,18 @@
 package warehouseservice_config
 
 import (
+	"log/slog"
 	"logistics/pkg/lib/logger/slogger"
+	"logistics/pkg/lib/utils"
 	"os"
-
-	"log"
-
-	"gopkg.in/yaml.v2"
 )
 
-type WarehouseGRPCServiceConfig struct {
-	Address string `yaml:"warehouse_grpc_service_address"`
-}
-
-func LoadWarehouseGRPCServiceConfig(configPath string) (*WarehouseGRPCServiceConfig, error) {
-	data, err := os.ReadFile(configPath)
+func LoadWarehouseGRPCServiceConfig(configPath string) (utils.ServiceConfig, error) {
+	serviceConfig, err := utils.LoadServiceConfig(configPath, "DB_WAREHOUSE_SERVICE_PASSWORD")
 	if err != nil {
-		log.Println("Error reading config file", slogger.Err(err))
+		slog.Error("Failed to load warehouse service configuration", slogger.Err(err))
 		defer os.Exit(1)
-		return nil, err
+		return utils.ServiceConfig{}, err
 	}
-
-	var address WarehouseGRPCServiceConfig
-	err = yaml.Unmarshal(data, &address)
-	if err != nil {
-		log.Println("Parsing YAML failed", slogger.Err(err))
-		return nil, err
-	}
-
-	return &WarehouseGRPCServiceConfig{
-		Address: address.Address,
-	}, nil
+	return serviceConfig, nil
 }

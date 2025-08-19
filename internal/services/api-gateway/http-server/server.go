@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	authpb "logistics/api/protobuf/auth_service"
 	"logistics/configs"
 	"logistics/internal/services/api-gateway/handler"
+	"logistics/internal/services/api-gateway/middleware"
 	"logistics/internal/services/api-gateway/routes"
 	"logistics/pkg/lib/logger/slogger"
 	"net/http"
@@ -15,6 +17,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -23,7 +26,7 @@ type Server struct {
 	// HTTP сервер
 	router *gin.Engine
 
-	handlers *handler.Handler // Хендлеры, которые используют gRPC-клиенты.
+	handlers *handler.Handlers // Хендлеры, которые используют gRPC-клиенты.
 
 	// Конфигурация
 	microservices_config *configs.MicroservicesConfig
@@ -34,40 +37,40 @@ type Server struct {
 func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesConfig) *Server {
 	router := gin.Default()
 
-	authGRPCConn, err := grpc.NewClient(microservices_config.AuthGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	authGRPCConn, err := grpc.NewClient(microservices_config.AuthGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for auth service", slogger.Err(err))
 		return nil
 	}
-	driverGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	driverGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for driver service", slogger.Err(err))
 		return nil
 	}
-	orderGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	orderGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for order service", slogger.Err(err))
 		return nil
 	}
-	routeGRPCConn, err := grpc.NewClient(microservices_config.RouteGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	routeGRPCConn, err := grpc.NewClient(microservices_config.RouteGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for route service", slogger.Err(err))
 		return nil
 	}
-	warehouseGRPCConn, err := grpc.NewClient(microservices_config.WarehouseGRPCServiceConfig, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	warehouseGRPCConn, err := grpc.NewClient(microservices_config.WarehouseGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for warehouse service", slogger.Err(err))
 		return nil
 	}
 
 	// Создание клиентов
-	authGRPCClient := authpb.NewUserServiceClient(authGRPCConn)
+	authGRPCClient := authpb.NewAuthServiceClient(authGRPCConn)
 	orderGRPCClient := orderpb.NewOrderServiceClient(orderGRPCConn)
 	driverGRPCClient := driverpb.NewDriverServiceClient(driverGRPCConn)
 	warehouseGRPCClient := warehousepb.NewWarehouseServiceClient(warehouseGRPCConn)
 	routeGRPCClient := routepb.NewRouteServiceClient(routeGRPCConn)
 
-	handlers := handler.NewHandler(authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient, routeGRPCClient)
+	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient, routeGRPCClient)
 	return &Server{
 		router:               router,
 		handlers:             handlers,
@@ -78,7 +81,7 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 
 func (s *Server) Run() error {
 
-	routes.SetupRoutes(s.router, s.handlers)
+	s.setupRoutes()
 
 	// Канал для ошибок сервера
 	serverErr := make(chan error, 1)
@@ -117,4 +120,22 @@ func (s *Server) Run() error {
 		return nil
 	}
 
+}
+
+func (s *Server) setupRoutes() {
+	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	api := s.router.Group("/api/v1")
+
+	// Public routes
+	routes.SetupAuthRoutes(api, s.handlers)
+
+	// Protected routes
+	protected := api.Group("")
+	protected.Use(middleware.AuthMiddleware(s.container.Services.AuthServiceInterface))
+	{
+		routes.SetupUserRoutes(protected, s.container.Handlers.UserHandlerInterface)
+		routes.SetupCategoryRoutes(protected, s.container.Handlers.CategoryHandlerInterface)
+		routes.SetupExpenseRoutes(protected, s.container.Handlers.ExpenseHandlerInterface)
+		routes.SetupBudgetRoutes(protected, s.container.Handlers.BudgetHandlerInterface)
+	}
 }

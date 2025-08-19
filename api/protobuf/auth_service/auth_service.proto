@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "/auth_generated"; // название пакета для сгенерированного Go кода
+
+import "google/protobuf/empty.proto";
+
+// Сервис аутентификации и авторизации
+service AuthService {
+  // Регистрация нового пользователя
+  rpc SignUp(SignUpRequest) returns (SignUpResponse);
+  
+  // Аутентификация пользователя
+  rpc SignIn(SignInRequest) returns (SignInResponse);
+  
+  // Завершение сессии пользователя
+  rpc Logout(LogoutRequest) returns (google.protobuf.Empty);
+  
+  // Проверка прав администратора
+  rpc IsAdmin(IsAdminRequest) returns (IsAdminResponse);
+  
+  // Валидация access токена
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  
+  // Получение UserID по refresh токену
+  rpc GetUserIDbyRefreshToken(GetUserIDbyRefreshTokenRequest) returns (GetUserIDbyRefreshTokenResponse);
+  
+  // Генерация нового access токена
+  rpc GenerateAccessToken(GenerateAccessTokenRequest) returns (GenerateAccessTokenResponse);
+  
+  // Генерация нового refresh токена
+  rpc GenerateRefreshToken(GenerateRefreshTokenRequest) returns (GenerateRefreshTokenResponse);
+  
+  // Сохранение нового refresh токена
+  rpc SaveNewRefreshToken(SaveNewRefreshTokenRequest) returns (SaveNewRefreshTokenResponse);
+}
+
+// Запрос на регистрацию
+message SignUpRequest {
+  string email = 1;
+  string password = 2;
+  string confirm_password = 3;
+  string first_name = 4;
+  string last_name = 5;
+}
+
+// Ответ на регистрацию
+message SignUpResponse {
+  int64 user_id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+}
+
+// Запрос на аутентификацию
+message SignInRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// Ответ на аутентификацию
+message SignInResponse {
+  int64 user_id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string access_token = 5;
+}
+
+// Запрос на выход из системы
+message LogoutRequest {
+  int64 user_id = 1;
+}
+
+// Запрос на проверку прав администратора
+message IsAdminRequest {
+  int64 user_id = 1;
+}
+
+// Ответ на проверку прав администратора
+message IsAdminResponse {
+  bool is_admin = 1;
+}
+
+// Запрос на валидацию токена
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+// Ответ на валидацию токена
+message ValidateTokenResponse {
+  int64 user_id = 1;
+}
+
+// Запрос на получение UserID по refresh токену
+message GetUserIDbyRefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+// Ответ на получение UserID по refresh токену
+message GetUserIDbyRefreshTokenResponse {
+  int64 user_id = 1;
+}
+
+// Запрос на генерацию access токена
+message GenerateAccessTokenRequest {
+  int64 user_id = 1;
+}
+
+// Ответ на генерацию access токена
+message GenerateAccessTokenResponse {
+  string access_token = 1;
+  int64 expires_at = 2; // UNIX timestamp
+}
+
+// Запрос на генерацию refresh токена
+message GenerateRefreshTokenRequest {
+  int64 user_id = 1;
+}
+
+// Ответ на генерацию refresh токена
+message GenerateRefreshTokenResponse {
+  int64 user_id = 1;
+  string refresh_token = 2;
+  int64 expires_at = 3; // UNIX timestamp
+}
+
+// Запрос на сохранение refresh токена
+message SaveNewRefreshTokenRequest {
+  int64 user_id = 1;
+  string refresh_token = 2;
+  int64 expires_at = 3; // UNIX timestamp
+}
+
+message SaveNewRefreshTokenResponse {
+    int64 user_id = 1;
+    string refresh_token = 2;
+    int64 expires_at = 3; // UNIX timestamp
+  }

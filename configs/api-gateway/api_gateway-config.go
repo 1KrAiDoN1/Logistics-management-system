@@ -2,33 +2,34 @@ package apigateway_config
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
+	"logistics/pkg/cache/redis"
 	"logistics/pkg/lib/logger/slogger"
 	"os"
 
 	"github.com/joho/godotenv"
-	"gopkg.in/yaml.v2"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
 	DB_config_path string
-	HTTPServer     `yaml:"http_server"`
-}
-
-func SetConfig() (string, error) {
-	log := slogger.SetupLogger()
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Error("Error loading .env file", slogger.Err(err))
-		os.Exit(1)
-		return "", err
-	}
-	DB_config_path := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_NAME"))
-	return DB_config_path, nil
+	HTTPServer     HTTPServer        `mapstructure:"http_server"`
+	RedisConfig    redis.RedisConfig `mapstructure:"redis_config"`
 }
 
 type HTTPServer struct {
 	Address string `yaml:"address" env-default:"0.0.0.0:9091"`
+}
+
+func SetConfig() (string, error) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		slog.Error("Error loading .env file", slogger.Err(err))
+		os.Exit(1)
+		return "", err
+	}
+	DB_config_path := fmt.Sprintf("%s://%s:%s@%s:%s/%s", os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_apiConfig"), os.Getenv("DB_NAME"))
+	return DB_config_path, nil
 }
 
 func LoadConfigServer(configPath string) (*Config, error) {
@@ -36,23 +37,33 @@ func LoadConfigServer(configPath string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		log.Fatal("Error reading config file", slogger.Err(err))
+	v := viper.New()
+	v.SetConfigType("yaml")
+	v.SetConfigFile(configPath)
+	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
 
-	var port Config
-	err = yaml.Unmarshal(data, &port)
-	if err != nil {
-		log.Fatal("Parsing YAML failed", slogger.Err(err))
+	var apiConfig *Config
+	if err := v.Unmarshal(&apiConfig); err != nil {
 		return nil, err
 	}
 
 	return &Config{
 		DB_config_path: db_configPath,
 		HTTPServer: HTTPServer{
-			Address: port.HTTPServer.Address,
+			Address: apiConfig.HTTPServer.Address,
+		},
+		RedisConfig: redis.RedisConfig{
+			Address:      apiConfig.RedisConfig.Address,
+			Password:     apiConfig.RedisConfig.Password,
+			DB:           apiConfig.RedisConfig.DB,
+			PoolSize:     apiConfig.RedisConfig.PoolSize,
+			MinIdleConns: apiConfig.RedisConfig.MinIdleConns,
+			MaxRetries:   apiConfig.RedisConfig.MaxRetries,
+			DialTimeout:  apiConfig.RedisConfig.DialTimeout,
+			ReadTimeout:  apiConfig.RedisConfig.ReadTimeout,
+			WriteTimeout: apiConfig.RedisConfig.WriteTimeout,
 		},
 	}, nil
 }

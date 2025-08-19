@@ -1,33 +1,19 @@
 package routeservice_config
 
 import (
-	"log"
+	"log/slog"
 	"logistics/pkg/lib/logger/slogger"
+	"logistics/pkg/lib/utils"
 	"os"
-
-	"gopkg.in/yaml.v2"
 )
 
-type RouteGRPCServiceConfig struct {
-	Address string `yaml:"route_grpc_service_address"`
-}
-
-func LoadRouteGRPCServiceConfig(configPath string) (*RouteGRPCServiceConfig, error) {
-	data, err := os.ReadFile(configPath)
+func LoadRouteGRPCServiceConfig(configPath string) (utils.ServiceConfig, error) {
+	serviceConfig, err := utils.LoadServiceConfig(configPath, "DB_WAREHOUSE_SERVICE_PASSWORD")
 	if err != nil {
-		log.Println("Error reading config file", slogger.Err(err))
+		slog.Error("Failed to load route service configuration", slogger.Err(err))
 		defer os.Exit(1)
-		return nil, err
+		return utils.ServiceConfig{}, err
 	}
+	return serviceConfig, nil
 
-	var address RouteGRPCServiceConfig
-	err = yaml.Unmarshal(data, &address)
-	if err != nil {
-		log.Println("Parsing YAML failed", slogger.Err(err))
-		return nil, err
-	}
-
-	return &RouteGRPCServiceConfig{
-		Address: address.Address,
-	}, nil
 }

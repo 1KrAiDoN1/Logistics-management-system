@@ -1,1 +1,7 @@
-driver_grpc_service_address: "0.0.0.0:40002"
+address: "0.0.0.0:40002"
+database:
+  driver: postgres
+  host: localhost
+  port: 5432
+  user: postgres
+  dbname: driver_db
