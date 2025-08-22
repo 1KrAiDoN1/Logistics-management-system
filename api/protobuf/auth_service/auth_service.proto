@@ -33,7 +33,10 @@ service AuthService {
   rpc GenerateRefreshToken(GenerateRefreshTokenRequest) returns (GenerateRefreshTokenResponse);
   
   // Сохранение нового refresh токена
-  rpc SaveNewRefreshToken(SaveNewRefreshTokenRequest) returns (SaveNewRefreshTokenResponse);
+  rpc SaveNewRefreshToken(SaveNewRefreshTokenRequest) returns (google.protobuf.Empty);
+
+  rpc RemoveOldRefreshToken(RemoveOldRefreshTokenRequest) returns (google.protobuf.Empty);
+
 }
 
 // Запрос на регистрацию
@@ -111,7 +114,6 @@ message GenerateAccessTokenRequest {
 // Ответ на генерацию access токена
 message GenerateAccessTokenResponse {
   string access_token = 1;
-  int64 expires_at = 2; // UNIX timestamp
 }
 
 // Запрос на генерацию refresh токена
@@ -123,18 +125,15 @@ message GenerateRefreshTokenRequest {
 message GenerateRefreshTokenResponse {
   int64 user_id = 1;
   string refresh_token = 2;
-  int64 expires_at = 3; // UNIX timestamp
 }
 
 // Запрос на сохранение refresh токена
 message SaveNewRefreshTokenRequest {
   int64 user_id = 1;
   string refresh_token = 2;
-  int64 expires_at = 3; // UNIX timestamp
 }
 
-message SaveNewRefreshTokenResponse {
-    int64 user_id = 1;
-    string refresh_token = 2;
-    int64 expires_at = 3; // UNIX timestamp
-  }
+message RemoveOldRefreshTokenRequest {
+  int64 user_id = 1;
+  string refresh_token = 2;
+}
