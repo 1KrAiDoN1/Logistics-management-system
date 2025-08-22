@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 	"log/slog"
-	auth_grpc_server "logistics/internal/services/auth-service/grpc"
+	auth_grpc_service "logistics/internal/services/auth-service/grpc"
 	"logistics/pkg/lib/utils"
 	"net"
 	"os"
@@ -20,9 +20,9 @@ type AuthGRPCApp struct {
 	AuthGRPCConfig utils.ServiceConfig
 }
 
-func NewApp(log *slog.Logger, authGRPCService *auth_grpc_server.AuthGRPCServer, authGRPCConfig utils.ServiceConfig) *AuthGRPCApp {
+func NewApp(log *slog.Logger, authGRPCService *auth_grpc_service.AuthGRPCService, authGRPCConfig utils.ServiceConfig) *AuthGRPCApp {
 	gRPCServer := grpc.NewServer()
-	auth_grpc_server.RegisterAuthServiceServer(gRPCServer, authGRPCService)
+	auth_grpc_service.RegisterAuthServiceServer(gRPCServer, authGRPCService)
 	reflection.Register(gRPCServer)
 
 	return &AuthGRPCApp{

@@ -29,6 +29,7 @@ const (
 	AuthService_GenerateAccessToken_FullMethodName     = "/auth.AuthService/GenerateAccessToken"
 	AuthService_GenerateRefreshToken_FullMethodName    = "/auth.AuthService/GenerateRefreshToken"
 	AuthService_SaveNewRefreshToken_FullMethodName     = "/auth.AuthService/SaveNewRefreshToken"
+	AuthService_RemoveOldRefreshToken_FullMethodName   = "/auth.AuthService/RemoveOldRefreshToken"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -54,7 +55,8 @@ type AuthServiceClient interface {
 	// Генерация нового refresh токена
 	GenerateRefreshToken(ctx context.Context, in *GenerateRefreshTokenRequest, opts ...grpc.CallOption) (*GenerateRefreshTokenResponse, error)
 	// Сохранение нового refresh токена
-	SaveNewRefreshToken(ctx context.Context, in *SaveNewRefreshTokenRequest, opts ...grpc.CallOption) (*SaveNewRefreshTokenResponse, error)
+	SaveNewRefreshToken(ctx context.Context, in *SaveNewRefreshTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	RemoveOldRefreshToken(ctx context.Context, in *RemoveOldRefreshTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type authServiceClient struct {
@@ -145,10 +147,20 @@ func (c *authServiceClient) GenerateRefreshToken(ctx context.Context, in *Genera
 	return out, nil
 }
 
-func (c *authServiceClient) SaveNewRefreshToken(ctx context.Context, in *SaveNewRefreshTokenRequest, opts ...grpc.CallOption) (*SaveNewRefreshTokenResponse, error) {
+func (c *authServiceClient) SaveNewRefreshToken(ctx context.Context, in *SaveNewRefreshTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(SaveNewRefreshTokenResponse)
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, AuthService_SaveNewRefreshToken_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) RemoveOldRefreshToken(ctx context.Context, in *RemoveOldRefreshTokenRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, AuthService_RemoveOldRefreshToken_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +190,8 @@ type AuthServiceServer interface {
 	// Генерация нового refresh токена
 	GenerateRefreshToken(context.Context, *GenerateRefreshTokenRequest) (*GenerateRefreshTokenResponse, error)
 	// Сохранение нового refresh токена
-	SaveNewRefreshToken(context.Context, *SaveNewRefreshTokenRequest) (*SaveNewRefreshTokenResponse, error)
+	SaveNewRefreshToken(context.Context, *SaveNewRefreshTokenRequest) (*emptypb.Empty, error)
+	RemoveOldRefreshToken(context.Context, *RemoveOldRefreshTokenRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -213,8 +226,11 @@ func (UnimplementedAuthServiceServer) GenerateAccessToken(context.Context, *Gene
 func (UnimplementedAuthServiceServer) GenerateRefreshToken(context.Context, *GenerateRefreshTokenRequest) (*GenerateRefreshTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateRefreshToken not implemented")
 }
-func (UnimplementedAuthServiceServer) SaveNewRefreshToken(context.Context, *SaveNewRefreshTokenRequest) (*SaveNewRefreshTokenResponse, error) {
+func (UnimplementedAuthServiceServer) SaveNewRefreshToken(context.Context, *SaveNewRefreshTokenRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveNewRefreshToken not implemented")
+}
+func (UnimplementedAuthServiceServer) RemoveOldRefreshToken(context.Context, *RemoveOldRefreshTokenRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveOldRefreshToken not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -399,6 +415,24 @@ func _AuthService_SaveNewRefreshToken_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_RemoveOldRefreshToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveOldRefreshTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).RemoveOldRefreshToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_RemoveOldRefreshToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).RemoveOldRefreshToken(ctx, req.(*RemoveOldRefreshTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -441,6 +475,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SaveNewRefreshToken",
 			Handler:    _AuthService_SaveNewRefreshToken_Handler,
+		},
+		{
+			MethodName: "RemoveOldRefreshToken",
+			Handler:    _AuthService_RemoveOldRefreshToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
