@@ -1,4 +1,4 @@
-proto:
+proto-auth:
 	protoc -I api/protobuf/ \
 		api/protobuf/auth_service/auth_service.proto \
 		--go_out=./api/protobuf \
@@ -12,3 +12,12 @@ proto:
 # 5. параметры для генерации go файлов
 # 6. папка, куда будут сгенерированы go файлы
 # 7. параметры для генерации grpc файлов
+
+
+proto-order:
+	protoc -I api/protobuf/ \
+		api/protobuf/order_service/order_service.proto \
+		--go_out=./api/protobuf \
+		--go_opt=paths=source_relative \
+		--go-grpc_out=./api/protobuf \
+		--go-grpc_opt=paths=source_relative
