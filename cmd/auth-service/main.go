@@ -5,6 +5,7 @@ import (
 	authservice_config "logistics/configs/auth-service"
 	auth_grpc_server "logistics/internal/services/auth-service/grpc"
 	"logistics/internal/services/auth-service/grpc/app"
+	auth_grpc_repository "logistics/internal/services/auth-service/grpc/repository"
 	"logistics/pkg/database/postgres"
 	"logistics/pkg/lib/logger/slogger"
 )
@@ -30,7 +31,8 @@ func main() {
 	}
 
 	dbpool := db.GetPool()
-	authGRPCService := auth_grpc_server.NewAuthGRPCServer(log, dbpool)
+	authGRPCRepository := auth_grpc_repository.NewAuthRepository(dbpool)
+	authGRPCService := auth_grpc_server.NewAuthGRPCService(log, authGRPCRepository)
 	authGRPCApp := app.NewApp(log, authGRPCService, authGRPCServiceConfig)
 	log.Info("Auth service configuration loaded successfully", "address", authGRPCServiceConfig.Address)
 

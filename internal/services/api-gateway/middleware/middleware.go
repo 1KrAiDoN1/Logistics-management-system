@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	authpb "logistics/api/protobuf/auth_service"
+	"logistics/internal/shared/models/dto"
+	"logistics/pkg/lib/logger/slogger"
 	"net/http"
 	"strings"
 	"time"
@@ -13,7 +17,6 @@ import (
 
 func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
-		log := logger.New("middleware", true)
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 		defer cancel()
 		authHeader := c.GetHeader("Authorization")
@@ -21,10 +24,7 @@ func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 			// Извлекаем токен из заголовка "Bearer TOKEN"
 			tokenParts := strings.Split(authHeader, " ")
 			if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-				log.Error("Invalid authorization header format", map[string]interface{}{
-					"header": authHeader,
-					"status": http.StatusUnauthorized,
-				})
+				slog.Error("Invalid authorization header format")
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
 				c.Abort()
 				return
@@ -34,104 +34,90 @@ func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 				}
 
 				// Валидация токена через сервис
-				userID, err := authService.ValidateToken(ctx, req)
+				userID, err := authGRPCService.ValidateToken(ctx, &authpb.ValidateTokenRequest{
+					AccessToken: req.AccessToken,
+				})
 				if err != nil {
-					log.Error("Invalid token", map[string]interface{}{
-						"error":  err,
-						"status": http.StatusUnauthorized,
-					})
+					slog.Error("Invalid token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
 					c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 					c.Abort()
 					return
 				}
-				c.Set("user_id", uint(userID.UserID))
+				c.Set("user_id", uint(userID.UserId))
 				c.Next()
 				return
 			}
 		} else {
 			refresh_token, err := c.Cookie("refresh_token")
 			if err != nil {
-				log.Error("Refresh token is required", map[string]interface{}{
-					"error":  err,
-					"status": http.StatusUnauthorized,
-				})
+				slog.Error("Refresh token is required", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token is required"})
 				c.Abort()
 				return
 			}
 			if refresh_token != "" {
-				userID, err := authService.GetUserIDbyRefreshToken(ctx, refresh_token) //нужно проверку сделать что refresh_token не истек
+				userID, err := authGRPCService.GetUserIDbyRefreshToken(ctx, &authpb.GetUserIDbyRefreshTokenRequest{
+					RefreshToken: refresh_token,
+				})
 				if err != nil {
-					log.Error("Invalid refresh token", map[string]interface{}{
-						"error":  err,
-						"status": http.StatusUnauthorized,
-					})
+					slog.Error("Invalid refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
 					c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 					c.Abort()
 					return
 				}
-				if userID != 0 {
-					err = authService.RemoveOldRefreshToken(ctx, userID)
+				if userID.UserId != 0 {
+					_, err = authGRPCService.RemoveOldRefreshToken(ctx, &authpb.RemoveOldRefreshTokenRequest{
+						UserId:       userID.UserId,
+						RefreshToken: refresh_token,
+					}) // удалить старый refresh token
 					if err != nil {
-						log.Error("Failed to remove old refresh token", map[string]interface{}{
-							"error":  err,
-							"status": http.StatusInternalServerError,
-						})
+						slog.Error("Failed to remove old refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
 						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove old refresh token"})
 						c.Abort()
 						return
 					}
-					new_access_token, err := authService.GenerateAccessToken(userID)
+					new_access_token, err := authGRPCService.GenerateAccessToken(ctx, &authpb.GenerateAccessTokenRequest{
+						UserId: userID.UserId,
+					})
 					if err != nil {
-						log.Error("Failed to generate new access token", map[string]interface{}{
-							"error":  err,
-							"status": http.StatusInternalServerError,
-						})
+						slog.Error("Failed to generate new access token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
 						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
 						c.Abort()
 						return
 					}
-					new_refresh_token, err := authService.GenerateRefreshToken()
+					new_refresh_token, err := authGRPCService.GenerateRefreshToken(ctx, &authpb.GenerateRefreshTokenRequest{
+						UserId: userID.UserId,
+					})
 					if err != nil {
-						log.Error("Failed to generate new refresh token", map[string]interface{}{
-							"error":  err,
-							"status": http.StatusInternalServerError,
-						})
+						slog.Error("Failed to generate new refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
 						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new refresh token"})
 						c.Abort()
 						return
 					}
-					err = authService.SaveNewRefreshToken(ctx, userID, new_refresh_token)
+					_, err = authGRPCService.SaveNewRefreshToken(ctx, &authpb.SaveNewRefreshTokenRequest{
+						UserId:       userID.UserId,
+						RefreshToken: new_refresh_token.RefreshToken,
+					})
 					if err != nil {
-						log.Error("Failed to save new refresh token", map[string]interface{}{
-							"error":  err,
-							"status": http.StatusInternalServerError,
-						})
+						slog.Error("Failed to save new refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
 						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save new refresh token"})
 						c.Abort()
 						return
 					}
 					c.Header("Authorization", "Bearer "+new_access_token.AccessToken)
-					SetRefreshTokenCookie(c, new_refresh_token.RefreshToken)
-					c.Set("user_id", uint(userID))
+					c.Set("user_id", uint(userID.UserId))
 					c.Next()
 					return
 
 				} else {
-					log.Error("Authorization is required", map[string]interface{}{
-						"error":  err,
-						"status": http.StatusUnauthorized,
-					})
+					slog.Error("Authorization is required", slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
 					c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization is required"})
 					c.Abort()
 					return
 				}
 
 			} else {
-				log.Error("Authorization is required", map[string]interface{}{
-					"error":  err,
-					"status": http.StatusUnauthorized,
-				})
+				slog.Error("Authorization is required", slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization is required"})
 				c.Abort()
 				return
@@ -157,16 +143,4 @@ func GetUserId(c *gin.Context) (uint, error) {
 	default:
 		return 0, fmt.Errorf("invalid user_id type: %T", userID)
 	}
-}
-
-func SetRefreshTokenCookie(c *gin.Context, refresh_token string) {
-	c.SetCookie(
-		"refresh_token",
-		refresh_token,
-		int(services.RefreshTokenTTL.Seconds()),
-		"/",
-		"",
-		true,
-		true,
-	)
 }

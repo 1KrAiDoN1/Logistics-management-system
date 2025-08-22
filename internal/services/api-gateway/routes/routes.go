@@ -29,8 +29,6 @@ func SetupOrderRoutes(router *gin.RouterGroup, orderHandler handler.OrderHandler
 		orders.POST("", orderHandler.CreateOrder)
 		orders.GET("", orderHandler.GetOrders)
 		orders.GET("/:order_id", orderHandler.GetOrderByID)
-		orders.DELETE("/:order_id", orderHandler.CancelOrder)
-		orders.GET("/:order_id/tracking", orderHandler.TrackOrder)
 		orders.POST("/:order_id/assign-driver", orderHandler.AssignDriver)
 	}
 }
@@ -38,12 +36,8 @@ func SetupOrderRoutes(router *gin.RouterGroup, orderHandler handler.OrderHandler
 func SetupAdminRoutes(router *gin.RouterGroup, adminHandler handler.AdminHandlerInterface) {
 	admin := router.Group("/admin")
 	{
-		admin.GET("/health", adminHandler.HealthCheck)
 		admin.GET("/metrics", adminHandler.GetMetrics)
 		admin.GET("/logs", adminHandler.GetLogs)
-		admin.POST("/config/reload", adminHandler.ReloadConfig)
-		admin.GET("/services/status", adminHandler.GetServicesStatus)
-		admin.POST("/cache/clear", adminHandler.ClearCache)
 		admin.GET("/system/info", adminHandler.GetSystemInfo)
 	}
 }
@@ -52,12 +46,12 @@ func SetupDeliveryRoutes(router *gin.RouterGroup, deliveryHandler handler.Delive
 	deliveries := router.Group("/deliveries")
 	{
 		deliveries.GET("", deliveryHandler.GetDeliveries)
-		deliveries.GET("/:delivery_id", deliveryHandler.GetDeliveryByID)
-		deliveries.PUT("/:delivery_id/status", deliveryHandler.UpdateDeliveryStatus)
-		deliveries.GET("/:delivery_id/tracking", deliveryHandler.TrackDelivery)
-		deliveries.POST("/:delivery_id/proof", deliveryHandler.UploadProofOfDelivery)
-		deliveries.GET("/driver/:driver_id", deliveryHandler.GetDeliveriesByDriver)
-		deliveries.GET("/route/:route_id", deliveryHandler.GetDeliveriesByRoute)
+		// deliveries.GET("/:delivery_id", deliveryHandler.GetDeliveryByID)
+		// deliveries.PUT("/:delivery_id/status", deliveryHandler.UpdateDeliveryStatus)
+		// deliveries.GET("/:delivery_id/tracking", deliveryHandler.TrackDelivery)
+		// deliveries.POST("/:delivery_id/proof", deliveryHandler.UploadProofOfDelivery)
+		// deliveries.GET("/driver/:driver_id", deliveryHandler.GetDeliveriesByDriver)
+		// deliveries.GET("/route/:route_id", deliveryHandler.GetDeliveriesByRoute)
 	}
 }
 

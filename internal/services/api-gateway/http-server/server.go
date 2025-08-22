@@ -26,9 +26,10 @@ type Server struct {
 	// HTTP сервер
 	router *gin.Engine
 
+	authGRPCClient authpb.AuthServiceClient
+
 	handlers *handler.Handlers // Хендлеры, которые используют gRPC-клиенты.
 
-	// Конфигурация
 	microservices_config *configs.MicroservicesConfig
 
 	logger *slog.Logger
@@ -73,6 +74,7 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient, routeGRPCClient)
 	return &Server{
 		router:               router,
+		authGRPCClient:       authGRPCClient,
 		handlers:             handlers,
 		microservices_config: microservices_config,
 		logger:               logger,
@@ -131,11 +133,11 @@ func (s *Server) setupRoutes() {
 
 	// Protected routes
 	protected := api.Group("")
-	protected.Use(middleware.AuthMiddleware(s.container.Services.AuthServiceInterface))
+	protected.Use(middleware.AuthMiddleware(s.authGRPCClient))
 	{
-		routes.SetupUserRoutes(protected, s.container.Handlers.UserHandlerInterface)
-		routes.SetupCategoryRoutes(protected, s.container.Handlers.CategoryHandlerInterface)
-		routes.SetupExpenseRoutes(protected, s.container.Handlers.ExpenseHandlerInterface)
-		routes.SetupBudgetRoutes(protected, s.container.Handlers.BudgetHandlerInterface)
+		routes.SetupUserRoutes(protected, s.handlers.UserHandlerInterface)
+		// routes.SetupCategoryRoutes(protected, s.handlers.CategoryHandlerInterface)
+		// routes.SetupExpenseRoutes(protected, s.handlers.ExpenseHandlerInterface)
+		// routes.SetupBudgetRoutes(protected, s.handlers.BudgetHandlerInterface)
 	}
 }
