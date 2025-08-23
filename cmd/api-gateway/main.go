@@ -14,6 +14,7 @@ func main() {
 	if err != nil {
 		log.Error("Failed to load microservices configuration", slogger.Err(err))
 		os.Exit(1)
+
 	}
 	redisClient, err := redis.NewRedisClient(microservices_config.ApiGatewayConfig.RedisConfig)
 	if err != nil {
@@ -39,7 +40,6 @@ func main() {
 		slog.Any("order_service", microservices_config.OrderGRPCServiceConfig),
 		slog.Any("driver_service", microservices_config.DriverGRPCServiceConfig),
 		slog.Any("warehouse_service", microservices_config.WarehouseGRPCServiceConfig),
-		slog.Any("route_service", microservices_config.RouteGRPCServiceConfig),
 	)
 
 }
