@@ -124,7 +124,7 @@ func (s *Server) setupRoutes() {
 	api := s.router.Group("/api/v1")
 
 	// Public routes
-	routes.SetupAuthRoutes(api, s.handlers)
+	routes.SetupAuthRoutes(api, s.handlers.AuthHandlerInterface)
 
 	// Protected routes
 	protected := api.Group("")
