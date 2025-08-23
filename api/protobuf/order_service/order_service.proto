@@ -9,10 +9,9 @@ import "google/protobuf/timestamp.proto";
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
-  rpc UpdateOrderRoute(UpdateOrderRouteRequest) returns (UpdateOrderRouteResponse);
   rpc AssignDriver(AssignDriverRequest) returns (AssignDriverResponse);
   rpc GetOrderDetails(GetOrderDetailsRequest) returns (GetOrderDetailsResponse);
-  rpc StartDelivery(StartDeliveryRequest) returns (StartDeliveryResponse);
+  rpc GetOrdersByUser(GetOrdersByUserRequest) returns (GetOrdersByUserResponse);
   rpc CompleteDelivery(CompleteDeliveryRequest) returns (CompleteDeliveryResponse);
 }
 
@@ -39,16 +38,6 @@ message UpdateOrderStatusResponse {
   string message = 2;
 }
 
-message UpdateOrderRouteRequest {
-  int64 order_id = 1;
-  int64 route_id = 2;
-  string status = 3;
-}
-
-message UpdateOrderRouteResponse {
-  bool success = 1;
-}
-
 message AssignDriverRequest {
   int64 order_id = 1;
   int64 driver_id = 2;
@@ -65,31 +54,24 @@ message GetOrderDetailsRequest {
 
 message GetOrderDetailsResponse {
   Order order = 1;
-  double total_weight = 2;
-  double total_volume = 3;
-  string priority = 4;
-  google.protobuf.Timestamp scheduled_at = 5;
-}
-
-message StartDeliveryRequest {
-  int64 order_id = 1;
-  int64 driver_id = 2;
-}
-
-message StartDeliveryResponse {
-  bool success = 1;
-  string message = 2;
 }
 
 message CompleteDeliveryRequest {
   int64 order_id = 1;
   int64 driver_id = 2;
-  DeliveryProof delivery_proof = 3;
 }
 
 message CompleteDeliveryResponse {
   bool success = 1;
   string message = 2;
+}
+
+message GetOrdersByUserRequest {
+  int64 user_id = 1;
+}
+
+message GetOrdersByUserResponse {
+  repeated Order orders = 1;
 }
 
 // Data structures
@@ -112,10 +94,3 @@ message OrderItem {
   double price = 5;
 }
 
-message DeliveryProof {
-  repeated string photos = 1;
-  string signature = 2;
-  string receiver_name = 3;
-  google.protobuf.Timestamp delivered_at = 4;
-  string comments = 5;
-}
