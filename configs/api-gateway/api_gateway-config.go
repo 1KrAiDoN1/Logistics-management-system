@@ -25,7 +25,6 @@ func SetConfig() (string, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
 		slog.Error("Error loading .env file", slogger.Err(err))
-		os.Exit(1)
 		return "", err
 	}
 	DB_config_path := fmt.Sprintf("%s://%s:%s@%s:%s/%s", os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST"), os.Getenv("DB_apiConfig"), os.Getenv("DB_NAME"))

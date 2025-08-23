@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	authpb "logistics/api/protobuf/auth_service"
+	orderpb "logistics/api/protobuf/order_service"
 	"logistics/configs"
 	"logistics/internal/services/api-gateway/handler"
 	"logistics/internal/services/api-gateway/middleware"
@@ -26,9 +27,10 @@ type Server struct {
 	// HTTP сервер
 	router *gin.Engine
 
+	authGRPCClient authpb.AuthServiceClient
+
 	handlers *handler.Handlers // Хендлеры, которые используют gRPC-клиенты.
 
-	// Конфигурация
 	microservices_config *configs.MicroservicesConfig
 
 	logger *slog.Logger
@@ -52,11 +54,6 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 		logger.Error("Failed to create gRPC client for order service", slogger.Err(err))
 		return nil
 	}
-	routeGRPCConn, err := grpc.NewClient(microservices_config.RouteGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		logger.Error("Failed to create gRPC client for route service", slogger.Err(err))
-		return nil
-	}
 	warehouseGRPCConn, err := grpc.NewClient(microservices_config.WarehouseGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for warehouse service", slogger.Err(err))
@@ -68,11 +65,11 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 	orderGRPCClient := orderpb.NewOrderServiceClient(orderGRPCConn)
 	driverGRPCClient := driverpb.NewDriverServiceClient(driverGRPCConn)
 	warehouseGRPCClient := warehousepb.NewWarehouseServiceClient(warehouseGRPCConn)
-	routeGRPCClient := routepb.NewRouteServiceClient(routeGRPCConn)
 
-	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient, routeGRPCClient)
+	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient)
 	return &Server{
-		router:               router,
+		router: router,
+		// authGRPCClient:       authGRPCClient,
 		handlers:             handlers,
 		microservices_config: microservices_config,
 		logger:               logger,
@@ -127,15 +124,15 @@ func (s *Server) setupRoutes() {
 	api := s.router.Group("/api/v1")
 
 	// Public routes
-	routes.SetupAuthRoutes(api, s.handlers)
+	routes.SetupAuthRoutes(api, s.handlers.AuthHandlerInterface)
 
 	// Protected routes
 	protected := api.Group("")
-	protected.Use(middleware.AuthMiddleware(s.container.Services.AuthServiceInterface))
+	protected.Use(middleware.AuthMiddleware(s.authGRPCClient))
 	{
-		routes.SetupUserRoutes(protected, s.container.Handlers.UserHandlerInterface)
-		routes.SetupCategoryRoutes(protected, s.container.Handlers.CategoryHandlerInterface)
-		routes.SetupExpenseRoutes(protected, s.container.Handlers.ExpenseHandlerInterface)
-		routes.SetupBudgetRoutes(protected, s.container.Handlers.BudgetHandlerInterface)
+		routes.SetupUserRoutes(protected, s.handlers.UserHandlerInterface)
+		// routes.SetupCategoryRoutes(protected, s.handlers.CategoryHandlerInterface)
+		// routes.SetupExpenseRoutes(protected, s.handlers.ExpenseHandlerInterface)
+		// routes.SetupBudgetRoutes(protected, s.handlers.BudgetHandlerInterface)
 	}
 }

@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log/slog"
+	"logistics/pkg/cache/redis"
 	"logistics/pkg/lib/logger/slogger"
 	"os"
 
@@ -42,8 +43,9 @@ func (d ServiceConfig) DSN(dbPasswordPath string) (string, error) {
 }
 
 type ServiceConfig struct {
-	Address  string   `yaml:"address"`
-	DbConfig DBConfig `mapstructure:"database"`
+	Address     string            `yaml:"address"`
+	DbConfig    DBConfig          `mapstructure:"database"`
+	RedisConfig redis.RedisConfig `mapstructure:"redis_config"`
 }
 type DBConfig struct {
 	Driver string `yaml:"driver"`

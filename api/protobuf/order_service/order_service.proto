@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package order;
+option go_package = "your-project/api/protobuf/order";
+
+import "google/protobuf/timestamp.proto";
+
+// Order Service
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+  rpc AssignDriver(AssignDriverRequest) returns (AssignDriverResponse);
+  rpc GetOrderDetails(GetOrderDetailsRequest) returns (GetOrderDetailsResponse);
+  rpc GetOrdersByUser(GetOrdersByUserRequest) returns (GetOrdersByUserResponse);
+  rpc CompleteDelivery(CompleteDeliveryRequest) returns (CompleteDeliveryResponse);
+}
+
+// Messages
+message CreateOrderRequest {
+  int64 user_id = 1;
+  string delivery_address = 2;
+  repeated OrderItem items = 3;
+}
+
+message CreateOrderResponse {
+  Order order = 1;
+  string message = 2;
+}
+
+message UpdateOrderStatusRequest {
+  int64 order_id = 1;
+  string status = 2;
+  optional int64 driver_id = 3;
+}
+
+message UpdateOrderStatusResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AssignDriverRequest {
+  int64 order_id = 1;
+  int64 driver_id = 2;
+}
+
+message AssignDriverResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetOrderDetailsRequest {
+  int64 order_id = 1;
+}
+
+message GetOrderDetailsResponse {
+  Order order = 1;
+}
+
+message CompleteDeliveryRequest {
+  int64 order_id = 1;
+  int64 driver_id = 2;
+}
+
+message CompleteDeliveryResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message GetOrdersByUserRequest {
+  int64 user_id = 1;
+}
+
+message GetOrdersByUserResponse {
+  repeated Order orders = 1;
+}
+
+// Data structures
+message Order {
+  int64 id = 1;
+  int64 user_id = 2;
+  string delivery_address = 3;
+  repeated OrderItem items = 4;
+  double total_amount = 5;
+  google.protobuf.Timestamp created_at = 6;
+  string status = 7;
+  int64 driver_id = 8;
+}
+
+message OrderItem {
+  int64 id = 1;
+  int64 order_id = 2;
+  int64 product_id = 3;
+  string product_name = 4;
+  double price = 5;
+}
+

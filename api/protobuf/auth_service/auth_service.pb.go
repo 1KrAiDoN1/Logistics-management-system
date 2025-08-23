@@ -662,7 +662,6 @@ func (x *GenerateAccessTokenRequest) GetUserId() int64 {
 type GenerateAccessTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,2,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"` // UNIX timestamp
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -702,13 +701,6 @@ func (x *GenerateAccessTokenResponse) GetAccessToken() string {
 		return x.AccessToken
 	}
 	return ""
-}
-
-func (x *GenerateAccessTokenResponse) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
 }
 
 // Запрос на генерацию refresh токена
@@ -761,7 +753,6 @@ type GenerateRefreshTokenResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"` // UNIX timestamp
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -810,19 +801,11 @@ func (x *GenerateRefreshTokenResponse) GetRefreshToken() string {
 	return ""
 }
 
-func (x *GenerateRefreshTokenResponse) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
-}
-
 // Запрос на сохранение refresh токена
 type SaveNewRefreshTokenRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"` // UNIX timestamp
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -871,36 +854,28 @@ func (x *SaveNewRefreshTokenRequest) GetRefreshToken() string {
 	return ""
 }
 
-func (x *SaveNewRefreshTokenRequest) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
-}
-
-type SaveNewRefreshTokenResponse struct {
+type RemoveOldRefreshTokenRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	ExpiresAt     int64                  `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"` // UNIX timestamp
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *SaveNewRefreshTokenResponse) Reset() {
-	*x = SaveNewRefreshTokenResponse{}
+func (x *RemoveOldRefreshTokenRequest) Reset() {
+	*x = RemoveOldRefreshTokenRequest{}
 	mi := &file_auth_service_auth_service_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *SaveNewRefreshTokenResponse) String() string {
+func (x *RemoveOldRefreshTokenRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SaveNewRefreshTokenResponse) ProtoMessage() {}
+func (*RemoveOldRefreshTokenRequest) ProtoMessage() {}
 
-func (x *SaveNewRefreshTokenResponse) ProtoReflect() protoreflect.Message {
+func (x *RemoveOldRefreshTokenRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_auth_service_auth_service_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -912,30 +887,23 @@ func (x *SaveNewRefreshTokenResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SaveNewRefreshTokenResponse.ProtoReflect.Descriptor instead.
-func (*SaveNewRefreshTokenResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use RemoveOldRefreshTokenRequest.ProtoReflect.Descriptor instead.
+func (*RemoveOldRefreshTokenRequest) Descriptor() ([]byte, []int) {
 	return file_auth_service_auth_service_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *SaveNewRefreshTokenResponse) GetUserId() int64 {
+func (x *RemoveOldRefreshTokenRequest) GetUserId() int64 {
 	if x != nil {
 		return x.UserId
 	}
 	return 0
 }
 
-func (x *SaveNewRefreshTokenResponse) GetRefreshToken() string {
+func (x *RemoveOldRefreshTokenRequest) GetRefreshToken() string {
 	if x != nil {
 		return x.RefreshToken
 	}
 	return ""
-}
-
-func (x *SaveNewRefreshTokenResponse) GetExpiresAt() int64 {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return 0
 }
 
 var File_auth_service_auth_service_proto protoreflect.FileDescriptor
@@ -981,28 +949,20 @@ const file_auth_service_auth_service_proto_rawDesc = "" +
 	"\x1fGetUserIDbyRefreshTokenResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"5\n" +
 	"\x1aGenerateAccessTokenRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\"_\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"@\n" +
 	"\x1bGenerateAccessTokenResponse\x12!\n" +
-	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x02 \x01(\x03R\texpiresAt\"6\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\"6\n" +
 	"\x1bGenerateRefreshTokenRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\x03R\x06userId\"{\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\"\\\n" +
 	"\x1cGenerateRefreshTokenResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x03 \x01(\x03R\texpiresAt\"y\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"Z\n" +
 	"\x1aSaveNewRefreshTokenRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x03 \x01(\x03R\texpiresAt\"z\n" +
-	"\x1bSaveNewRefreshTokenResponse\x12\x17\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"\\\n" +
+	"\x1cRemoveOldRefreshTokenRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
-	"\n" +
-	"expires_at\x18\x03 \x01(\x03R\texpiresAt2\xaf\x05\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2\xf9\x05\n" +
 	"\vAuthService\x123\n" +
 	"\x06SignUp\x12\x13.auth.SignUpRequest\x1a\x14.auth.SignUpResponse\x123\n" +
 	"\x06SignIn\x12\x13.auth.SignInRequest\x1a\x14.auth.SignInResponse\x125\n" +
@@ -1011,8 +971,9 @@ const file_auth_service_auth_service_proto_rawDesc = "" +
 	"\rValidateToken\x12\x1a.auth.ValidateTokenRequest\x1a\x1b.auth.ValidateTokenResponse\x12f\n" +
 	"\x17GetUserIDbyRefreshToken\x12$.auth.GetUserIDbyRefreshTokenRequest\x1a%.auth.GetUserIDbyRefreshTokenResponse\x12Z\n" +
 	"\x13GenerateAccessToken\x12 .auth.GenerateAccessTokenRequest\x1a!.auth.GenerateAccessTokenResponse\x12]\n" +
-	"\x14GenerateRefreshToken\x12!.auth.GenerateRefreshTokenRequest\x1a\".auth.GenerateRefreshTokenResponse\x12Z\n" +
-	"\x13SaveNewRefreshToken\x12 .auth.SaveNewRefreshTokenRequest\x1a!.auth.SaveNewRefreshTokenResponseB\x11Z\x0f/auth_generatedb\x06proto3"
+	"\x14GenerateRefreshToken\x12!.auth.GenerateRefreshTokenRequest\x1a\".auth.GenerateRefreshTokenResponse\x12O\n" +
+	"\x13SaveNewRefreshToken\x12 .auth.SaveNewRefreshTokenRequest\x1a\x16.google.protobuf.Empty\x12S\n" +
+	"\x15RemoveOldRefreshToken\x12\".auth.RemoveOldRefreshTokenRequest\x1a\x16.google.protobuf.EmptyB\x11Z\x0f/auth_generatedb\x06proto3"
 
 var (
 	file_auth_service_auth_service_proto_rawDescOnce sync.Once
@@ -1044,7 +1005,7 @@ var file_auth_service_auth_service_proto_goTypes = []any{
 	(*GenerateRefreshTokenRequest)(nil),     // 13: auth.GenerateRefreshTokenRequest
 	(*GenerateRefreshTokenResponse)(nil),    // 14: auth.GenerateRefreshTokenResponse
 	(*SaveNewRefreshTokenRequest)(nil),      // 15: auth.SaveNewRefreshTokenRequest
-	(*SaveNewRefreshTokenResponse)(nil),     // 16: auth.SaveNewRefreshTokenResponse
+	(*RemoveOldRefreshTokenRequest)(nil),    // 16: auth.RemoveOldRefreshTokenRequest
 	(*emptypb.Empty)(nil),                   // 17: google.protobuf.Empty
 }
 var file_auth_service_auth_service_proto_depIdxs = []int32{
@@ -1057,17 +1018,19 @@ var file_auth_service_auth_service_proto_depIdxs = []int32{
 	11, // 6: auth.AuthService.GenerateAccessToken:input_type -> auth.GenerateAccessTokenRequest
 	13, // 7: auth.AuthService.GenerateRefreshToken:input_type -> auth.GenerateRefreshTokenRequest
 	15, // 8: auth.AuthService.SaveNewRefreshToken:input_type -> auth.SaveNewRefreshTokenRequest
-	1,  // 9: auth.AuthService.SignUp:output_type -> auth.SignUpResponse
-	3,  // 10: auth.AuthService.SignIn:output_type -> auth.SignInResponse
-	17, // 11: auth.AuthService.Logout:output_type -> google.protobuf.Empty
-	6,  // 12: auth.AuthService.IsAdmin:output_type -> auth.IsAdminResponse
-	8,  // 13: auth.AuthService.ValidateToken:output_type -> auth.ValidateTokenResponse
-	10, // 14: auth.AuthService.GetUserIDbyRefreshToken:output_type -> auth.GetUserIDbyRefreshTokenResponse
-	12, // 15: auth.AuthService.GenerateAccessToken:output_type -> auth.GenerateAccessTokenResponse
-	14, // 16: auth.AuthService.GenerateRefreshToken:output_type -> auth.GenerateRefreshTokenResponse
-	16, // 17: auth.AuthService.SaveNewRefreshToken:output_type -> auth.SaveNewRefreshTokenResponse
-	9,  // [9:18] is the sub-list for method output_type
-	0,  // [0:9] is the sub-list for method input_type
+	16, // 9: auth.AuthService.RemoveOldRefreshToken:input_type -> auth.RemoveOldRefreshTokenRequest
+	1,  // 10: auth.AuthService.SignUp:output_type -> auth.SignUpResponse
+	3,  // 11: auth.AuthService.SignIn:output_type -> auth.SignInResponse
+	17, // 12: auth.AuthService.Logout:output_type -> google.protobuf.Empty
+	6,  // 13: auth.AuthService.IsAdmin:output_type -> auth.IsAdminResponse
+	8,  // 14: auth.AuthService.ValidateToken:output_type -> auth.ValidateTokenResponse
+	10, // 15: auth.AuthService.GetUserIDbyRefreshToken:output_type -> auth.GetUserIDbyRefreshTokenResponse
+	12, // 16: auth.AuthService.GenerateAccessToken:output_type -> auth.GenerateAccessTokenResponse
+	14, // 17: auth.AuthService.GenerateRefreshToken:output_type -> auth.GenerateRefreshTokenResponse
+	17, // 18: auth.AuthService.SaveNewRefreshToken:output_type -> google.protobuf.Empty
+	17, // 19: auth.AuthService.RemoveOldRefreshToken:output_type -> google.protobuf.Empty
+	10, // [10:20] is the sub-list for method output_type
+	0,  // [0:10] is the sub-list for method input_type
 	0,  // [0:0] is the sub-list for extension type_name
 	0,  // [0:0] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name
