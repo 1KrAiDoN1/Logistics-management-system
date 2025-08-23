@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	authpb "logistics/api/protobuf/auth_service"
+	orderpb "logistics/api/protobuf/order_service"
 	"logistics/configs"
 	"logistics/internal/services/api-gateway/handler"
 	"logistics/internal/services/api-gateway/middleware"
@@ -53,11 +54,6 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 		logger.Error("Failed to create gRPC client for order service", slogger.Err(err))
 		return nil
 	}
-	routeGRPCConn, err := grpc.NewClient(microservices_config.RouteGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		logger.Error("Failed to create gRPC client for route service", slogger.Err(err))
-		return nil
-	}
 	warehouseGRPCConn, err := grpc.NewClient(microservices_config.WarehouseGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for warehouse service", slogger.Err(err))
@@ -69,12 +65,11 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 	orderGRPCClient := orderpb.NewOrderServiceClient(orderGRPCConn)
 	driverGRPCClient := driverpb.NewDriverServiceClient(driverGRPCConn)
 	warehouseGRPCClient := warehousepb.NewWarehouseServiceClient(warehouseGRPCConn)
-	routeGRPCClient := routepb.NewRouteServiceClient(routeGRPCConn)
 
-	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient, routeGRPCClient)
+	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient)
 	return &Server{
-		router:               router,
-		authGRPCClient:       authGRPCClient,
+		router: router,
+		// authGRPCClient:       authGRPCClient,
 		handlers:             handlers,
 		microservices_config: microservices_config,
 		logger:               logger,

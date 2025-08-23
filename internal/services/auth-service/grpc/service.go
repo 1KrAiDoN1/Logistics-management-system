@@ -7,20 +7,23 @@ import (
 	authpb "logistics/api/protobuf/auth_service"
 	"logistics/internal/services/auth-service/domain"
 
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type AuthGRPCService struct {
 	authpb.UnimplementedAuthServiceServer
-	log        *slog.Logger
-	repository domain.AuthRepositoryInterface
+	log            *slog.Logger
+	authrepository domain.AuthRepositoryInterface
+	redisClient    *redis.Client
 }
 
-func NewAuthGRPCService(log *slog.Logger, repository domain.AuthRepositoryInterface) *AuthGRPCService {
+func NewAuthGRPCService(log *slog.Logger, repository domain.AuthRepositoryInterface, redisClient *redis.Client) *AuthGRPCService {
 	return &AuthGRPCService{
-		log:        log,
-		repository: repository,
+		log:            log,
+		authrepository: repository,
+		redisClient:    redisClient,
 	}
 }
 

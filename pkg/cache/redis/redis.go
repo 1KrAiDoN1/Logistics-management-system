@@ -3,6 +3,8 @@ package redis
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"logistics/pkg/lib/logger/slogger"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -42,21 +44,21 @@ func NewRedisClient(cfg RedisConfig) (*RedisClient, error) {
 	// Проверяем подключение
 	_, err := client.Ping(ctx).Result()
 	if err != nil {
-		fmt.Println("Ошибка подключения к Redis:", err)
+		slog.Error("Failed to connect Redis", slogger.Err(err), slog.String("address", cfg.Address))
 		return nil, err
 	}
-	fmt.Println("Подключение к Redis успешно")
+	slog.Info("Connected to Redis", slog.String("address", cfg.Address))
 	err = client.Set(ctx, "example_key", "example_value", 0).Err()
 	if err != nil {
-		fmt.Println("Ошибка при установке значения в Redis:", err)
+		slog.Error("Ошибка при установке значения в Redis", slogger.Err(err), slog.String("key", "example_key"))
 		return nil, err
 	}
 	res, err := client.Get(ctx, "example_key").Result()
 	if err != nil {
-		fmt.Println("Ошибка при получении значения из Redis:", err)
+		slog.Error("Ошибка при получении значения из Redis", slogger.Err(err), slog.String("key", "example_key"))
 		return nil, err
 	}
-	fmt.Println("Полученное значение из Redis:", res)
+	slog.Info("Successfully set and retrieved value from Redis", slog.String("key", "example_key"), slog.String("value", res))
 	redisClient := &RedisClient{
 		Client: client,
 		ctx:    ctx,

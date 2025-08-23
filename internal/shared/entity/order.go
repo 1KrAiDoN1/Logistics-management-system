@@ -4,22 +4,15 @@ import "time"
 
 // Order - основная структура заказа
 type Order struct {
-	ID              int64          `json:"id" db:"id"`
-	UserID          int64          `json:"user_id" db:"user_id"`
-	Status          OrderStatus    `json:"status" db:"status"`
-	DeliveryAddress string         `json:"delivery_address" db:"delivery_address"`
-	PickupAddress   string         `json:"pickup_address" db:"pickup_address"`
-	Items           []OrderItem    `json:"items"`
-	TotalAmount     float64        `json:"total_amount" db:"total_amount"`
-	TotalWeight     float64        `json:"total_weight" db:"total_weight"`
-	TotalVolume     float64        `json:"total_volume" db:"total_volume"`
-	RouteID         *int64         `json:"route_id" db:"route_id"`
-	DriverID        *int64         `json:"driver_id" db:"driver_id"`
-	EstimatedTime   *time.Duration `json:"estimated_time" db:"estimated_time"`
-	Priority        OrderPriority  `json:"priority" db:"priority"`
-	CreatedAt       time.Time      `json:"created_at" db:"created_at"`
-	UpdatedAt       time.Time      `json:"updated_at" db:"updated_at"`
-	ScheduledAt     *time.Time     `json:"scheduled_at" db:"scheduled_at"` // когда доставить
+	ID              int64       `json:"id" db:"id"`
+	UserID          int64       `json:"user_id" db:"user_id"`
+	Status          OrderStatus `json:"status" db:"status"`
+	DeliveryAddress string      `json:"delivery_address" db:"delivery_address"`
+	Items           []OrderItem `json:"items"`
+	TotalAmount     float64     `json:"total_amount" db:"total_amount"`
+	DriverID        *int64      `json:"driver_id" db:"driver_id"`
+	CreatedAt       time.Time   `json:"created_at" db:"created_at"`
+	ScheduledAt     *time.Time  `json:"scheduled_at" db:"scheduled_at"` // когда доставить
 }
 
 type OrderStatus string
@@ -35,24 +28,11 @@ const (
 	StatusFailed     OrderStatus = "failed"      // ошибка
 )
 
-type OrderPriority string
-
-const (
-	PriorityLow    OrderPriority = "low"
-	PriorityNormal OrderPriority = "normal"
-	PriorityHigh   OrderPriority = "high"
-	PriorityUrgent OrderPriority = "urgent"
-)
-
 // OrderItem - товар в заказе
 type OrderItem struct {
 	ID          int64   `json:"id" db:"id"`
 	OrderID     int64   `json:"order_id" db:"order_id"`
 	ProductID   int64   `json:"product_id" db:"product_id"`
 	ProductName string  `json:"product_name" db:"product_name"`
-	Quantity    int32   `json:"quantity" db:"quantity"`
 	Price       float64 `json:"price" db:"price"`
-	Weight      float64 `json:"weight" db:"weight"` // кг
-	Volume      float64 `json:"volume" db:"volume"` // м³
-	WarehouseID int64   `json:"warehouse_id" db:"warehouse_id"`
 }
