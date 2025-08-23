@@ -5,7 +5,6 @@ import (
 	authservice_config "logistics/configs/auth-service"
 	driverservice_config "logistics/configs/driver-service"
 	orderservice_config "logistics/configs/order-service"
-	routeservice_config "logistics/configs/route-service"
 	warehouseservice_config "logistics/configs/warehouse-service"
 	"logistics/pkg/lib/utils"
 )
@@ -16,7 +15,6 @@ type MicroservicesConfig struct {
 	OrderGRPCServiceConfig     utils.ServiceConfig
 	DriverGRPCServiceConfig    utils.ServiceConfig
 	WarehouseGRPCServiceConfig utils.ServiceConfig
-	RouteGRPCServiceConfig     utils.ServiceConfig
 }
 
 func NewMicroservicesConfig() (*MicroservicesConfig, error) {
@@ -45,11 +43,6 @@ func NewMicroservicesConfig() (*MicroservicesConfig, error) {
 		defer panic("Failed to load warehouse service config: " + err.Error())
 		return nil, err
 	}
-	routeGRPCServiceConfig, err := routeservice_config.LoadRouteGRPCServiceConfig("configs/route-service/route_service_config.yaml")
-	if err != nil {
-		defer panic("Failed to load route service config: " + err.Error())
-		return nil, err
-	}
 
 	return &MicroservicesConfig{
 		ApiGatewayConfig:           apiGatewayConfig,
@@ -57,6 +50,5 @@ func NewMicroservicesConfig() (*MicroservicesConfig, error) {
 		OrderGRPCServiceConfig:     orderGRPCServiceConfig,
 		DriverGRPCServiceConfig:    driverGRPCServiceConfig,
 		WarehouseGRPCServiceConfig: warehouseGRPCServiceConfig,
-		RouteGRPCServiceConfig:     routeGRPCServiceConfig,
 	}, nil
 }

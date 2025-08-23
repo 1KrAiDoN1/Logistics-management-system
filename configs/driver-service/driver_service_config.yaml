@@ -5,3 +5,13 @@ database:
   port: 5432
   user: postgres
   dbname: driver_db
+redis_config:
+  address: "0.0.0.0:6379"
+  password: ""
+  db: 0
+  pool_size: 100
+  min_idle_conns: 10
+  max_retries: 3
+  dial_timeout_seconds: 5
+  read_timeout_seconds: 3
+  write_timeout_seconds: 3
