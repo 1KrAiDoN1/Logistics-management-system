@@ -1,17 +1,15 @@
 syntax = "proto3";
 
 package warehouse;
-option go_package = "your-project/api/protobuf/warehouse";
+option go_package = "/warehouse";
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 // Warehouse Service
 service WarehouseService {
   rpc CheckStockAvailability(CheckStockRequest) returns (CheckStockResponse);
-  rpc ReserveStock(ReserveStockRequest) returns (ReserveStockResponse);
-  rpc ConfirmReservation(ConfirmReservationRequest) returns (ConfirmReservationResponse);
-  rpc CancelReservation(CancelReservationRequest) returns (CancelReservationResponse);
-  rpc GetWarehouseStock(GetWarehouseStockRequest) returns (GetWarehouseStockResponse);
+  rpc GetWarehouseStock(google.protobuf.Empty) returns (GetWarehouseStockResponse);
   rpc UpdateStock(UpdateStockRequest) returns (UpdateStockResponse);
 }
 
@@ -25,47 +23,12 @@ message CheckStockResponse {
   string message = 3;
 }
 
-message ReserveStockRequest {
-  repeated StockItem items = 1;
-  string order_ref = 2;
-  int32 ttl = 3; // seconds
-}
-
-message ReserveStockResponse {
-  string reservation_id = 1;
-  repeated ReservationItem items = 2;
-  google.protobuf.Timestamp expires_at = 3;
-  string status = 4;
-}
-
-message ConfirmReservationRequest {
-  string reservation_id = 1;
-}
-
-message ConfirmReservationResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-message CancelReservationRequest {
-  string reservation_id = 1;
-}
-
-message CancelReservationResponse {
-  bool success = 1;
-  string message = 2;
-}
-
-message GetWarehouseStockRequest {
-  int64 warehouse_id = 1;
-}
 
 message GetWarehouseStockResponse {
   repeated Stock stocks = 1;
 }
 
 message UpdateStockRequest {
-  int64 warehouse_id = 1;
   int64 product_id = 2;
   int32 quantity = 3;
 }
@@ -82,36 +45,12 @@ message StockItem {
 message StockItemWithWarehouse {
   int64 product_id = 1;
   int32 quantity = 2;
-  int64 warehouse_id = 3;
-  string warehouse_name = 4;
-  string warehouse_address = 5;
-  double weight = 6;
-  double volume = 7;
-}
-
-message ReservationItem {
-  int64 product_id = 1;
-  int64 warehouse_id = 2;
-  int32 quantity = 3;
 }
 
 message Stock {
-  int64 id = 1;
-  int64 warehouse_id = 2;
-  int64 product_id = 3;
-  string product_name = 4;
-  int32 quantity = 5;
-  int32 reserved = 6;
-  int32 available = 7;
-  google.protobuf.Timestamp updated_at = 8;
+  int64 product_id = 1;
+  string product_name = 2;
+  int32 quantity = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
-
-message Warehouse {
-  int64 id = 1;
-  string name = 2;
-  string address = 3;
-  double latitude = 4;
-  double longitude = 5;
-  bool is_active = 6;
-  google.protobuf.Timestamp created_at = 7;
-}
+ 
