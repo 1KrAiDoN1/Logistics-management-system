@@ -21,3 +21,19 @@ proto-order:
 		--go_opt=paths=source_relative \
 		--go-grpc_out=./api/protobuf \
 		--go-grpc_opt=paths=source_relative
+
+proto-driver:
+	protoc -I api/protobuf/ \
+		api/protobuf/driver_service/driver_service.proto \
+		--go_out=./api/protobuf \
+		--go_opt=paths=source_relative \
+		--go-grpc_out=./api/protobuf \
+		--go-grpc_opt=paths=source_relative
+
+proto-warehouse:
+	protoc -I api/protobuf/ \
+		api/protobuf/warehouse_service/warehouse_service.proto \
+		--go_out=./api/protobuf \
+		--go_opt=paths=source_relative \
+		--go-grpc_out=./api/protobuf \
+		--go-grpc_opt=paths=source_relative
