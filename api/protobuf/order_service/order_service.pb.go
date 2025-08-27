@@ -742,11 +742,10 @@ func (x *Order) GetDriverId() int64 {
 
 type OrderItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	ProductId     int64                  `protobuf:"varint,3,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
-	ProductName   string                 `protobuf:"bytes,4,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
-	Price         float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
+	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	ProductId     int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	ProductName   string                 `protobuf:"bytes,3,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	Price         float64                `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -779,13 +778,6 @@ func (x *OrderItem) ProtoReflect() protoreflect.Message {
 // Deprecated: Use OrderItem.ProtoReflect.Descriptor instead.
 func (*OrderItem) Descriptor() ([]byte, []int) {
 	return file_order_service_order_service_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *OrderItem) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
 }
 
 func (x *OrderItem) GetOrderId() int64 {
@@ -867,14 +859,13 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x16\n" +
 	"\x06status\x18\a \x01(\tR\x06status\x12\x1b\n" +
-	"\tdriver_id\x18\b \x01(\x03R\bdriverId\"\x8e\x01\n" +
-	"\tOrderItem\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\x03R\aorderId\x12\x1d\n" +
+	"\tdriver_id\x18\b \x01(\x03R\bdriverId\"~\n" +
+	"\tOrderItem\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x03 \x01(\x03R\tproductId\x12!\n" +
-	"\fproduct_name\x18\x04 \x01(\tR\vproductName\x12\x14\n" +
-	"\x05price\x18\x05 \x01(\x01R\x05price2\xee\x03\n" +
+	"product_id\x18\x02 \x01(\x03R\tproductId\x12!\n" +
+	"\fproduct_name\x18\x03 \x01(\tR\vproductName\x12\x14\n" +
+	"\x05price\x18\x04 \x01(\x01R\x05price2\xee\x03\n" +
 	"\fOrderService\x12D\n" +
 	"\vCreateOrder\x12\x19.order.CreateOrderRequest\x1a\x1a.order.CreateOrderResponse\x12V\n" +
 	"\x11UpdateOrderStatus\x12\x1f.order.UpdateOrderStatusRequest\x1a .order.UpdateOrderStatusResponse\x12G\n" +
