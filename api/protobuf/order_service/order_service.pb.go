@@ -250,7 +250,6 @@ func (x *UpdateOrderStatusResponse) GetMessage() string {
 type AssignDriverRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	DriverId      int64                  `protobuf:"varint,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -292,17 +291,12 @@ func (x *AssignDriverRequest) GetOrderId() int64 {
 	return 0
 }
 
-func (x *AssignDriverRequest) GetDriverId() int64 {
-	if x != nil {
-		return x.DriverId
-	}
-	return 0
-}
-
 type AssignDriverResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	DriverId      int64                  `protobuf:"varint,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	Success       bool                   `protobuf:"varint,3,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -335,6 +329,20 @@ func (x *AssignDriverResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use AssignDriverResponse.ProtoReflect.Descriptor instead.
 func (*AssignDriverResponse) Descriptor() ([]byte, []int) {
 	return file_order_service_order_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AssignDriverResponse) GetDriverId() int64 {
+	if x != nil {
+		return x.DriverId
+	}
+	return 0
+}
+
+func (x *AssignDriverResponse) GetOrderId() int64 {
+	if x != nil {
+		return x.OrderId
+	}
+	return 0
 }
 
 func (x *AssignDriverResponse) GetSuccess() bool {
@@ -734,11 +742,10 @@ func (x *Order) GetDriverId() int64 {
 
 type OrderItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	ProductId     int64                  `protobuf:"varint,3,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
-	ProductName   string                 `protobuf:"bytes,4,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
-	Price         float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
+	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	ProductId     int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	ProductName   string                 `protobuf:"bytes,3,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
+	Price         float64                `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -771,13 +778,6 @@ func (x *OrderItem) ProtoReflect() protoreflect.Message {
 // Deprecated: Use OrderItem.ProtoReflect.Descriptor instead.
 func (*OrderItem) Descriptor() ([]byte, []int) {
 	return file_order_service_order_service_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *OrderItem) GetId() int64 {
-	if x != nil {
-		return x.Id
-	}
-	return 0
 }
 
 func (x *OrderItem) GetOrderId() int64 {
@@ -828,13 +828,14 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"_driver_id\"O\n" +
 	"\x19UpdateOrderStatusResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"M\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"0\n" +
 	"\x13AssignDriverRequest\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1b\n" +
-	"\tdriver_id\x18\x02 \x01(\x03R\bdriverId\"J\n" +
-	"\x14AssignDriverResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"3\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\"\x82\x01\n" +
+	"\x14AssignDriverResponse\x12\x1b\n" +
+	"\tdriver_id\x18\x01 \x01(\x03R\bdriverId\x12\x19\n" +
+	"\border_id\x18\x02 \x01(\x03R\aorderId\x12\x18\n" +
+	"\asuccess\x18\x03 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x04 \x01(\tR\amessage\"3\n" +
 	"\x16GetOrderDetailsRequest\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\x03R\aorderId\"=\n" +
 	"\x17GetOrderDetailsResponse\x12\"\n" +
@@ -858,21 +859,20 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x16\n" +
 	"\x06status\x18\a \x01(\tR\x06status\x12\x1b\n" +
-	"\tdriver_id\x18\b \x01(\x03R\bdriverId\"\x8e\x01\n" +
-	"\tOrderItem\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\x03R\aorderId\x12\x1d\n" +
+	"\tdriver_id\x18\b \x01(\x03R\bdriverId\"~\n" +
+	"\tOrderItem\x12\x19\n" +
+	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1d\n" +
 	"\n" +
-	"product_id\x18\x03 \x01(\x03R\tproductId\x12!\n" +
-	"\fproduct_name\x18\x04 \x01(\tR\vproductName\x12\x14\n" +
-	"\x05price\x18\x05 \x01(\x01R\x05price2\xee\x03\n" +
+	"product_id\x18\x02 \x01(\x03R\tproductId\x12!\n" +
+	"\fproduct_name\x18\x03 \x01(\tR\vproductName\x12\x14\n" +
+	"\x05price\x18\x04 \x01(\x01R\x05price2\xee\x03\n" +
 	"\fOrderService\x12D\n" +
 	"\vCreateOrder\x12\x19.order.CreateOrderRequest\x1a\x1a.order.CreateOrderResponse\x12V\n" +
 	"\x11UpdateOrderStatus\x12\x1f.order.UpdateOrderStatusRequest\x1a .order.UpdateOrderStatusResponse\x12G\n" +
 	"\fAssignDriver\x12\x1a.order.AssignDriverRequest\x1a\x1b.order.AssignDriverResponse\x12P\n" +
 	"\x0fGetOrderDetails\x12\x1d.order.GetOrderDetailsRequest\x1a\x1e.order.GetOrderDetailsResponse\x12P\n" +
 	"\x0fGetOrdersByUser\x12\x1d.order.GetOrdersByUserRequest\x1a\x1e.order.GetOrdersByUserResponse\x12S\n" +
-	"\x10CompleteDelivery\x12\x1e.order.CompleteDeliveryRequest\x1a\x1f.order.CompleteDeliveryResponseB!Z\x1fyour-project/api/protobuf/orderb\x06proto3"
+	"\x10CompleteDelivery\x12\x1e.order.CompleteDeliveryRequest\x1a\x1f.order.CompleteDeliveryResponseB\bZ\x06/orderb\x06proto3"
 
 var (
 	file_order_service_order_service_proto_rawDescOnce sync.Once

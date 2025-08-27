@@ -12,7 +12,6 @@ type Order struct {
 	TotalAmount     float64     `json:"total_amount" db:"total_amount"`
 	DriverID        *int64      `json:"driver_id" db:"driver_id"`
 	CreatedAt       time.Time   `json:"created_at" db:"created_at"`
-	ScheduledAt     *time.Time  `json:"scheduled_at" db:"scheduled_at"` // когда доставить
 }
 
 type OrderStatus string

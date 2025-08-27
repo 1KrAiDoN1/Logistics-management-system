@@ -8,19 +8,11 @@ type AuthHandlerInterface interface {
 	Logout(c *gin.Context)
 }
 
-type UserHandlerInterface interface {
-	GetUserProfile(c *gin.Context)
-	DeleteUser(c *gin.Context)
-}
-
 type OrderHandlerInterface interface {
 	CreateOrder(c *gin.Context)
 	GetOrders(c *gin.Context)
 	GetOrderByID(c *gin.Context)
 	AssignDriver(c *gin.Context)
-}
-
-type DeliveryHandlerInterface interface {
 	GetDeliveries(c *gin.Context)
 }
 

@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package order;
-option go_package = "your-project/api/protobuf/order";
+option go_package = "/order";
 
 import "google/protobuf/timestamp.proto";
 
@@ -40,12 +40,14 @@ message UpdateOrderStatusResponse {
 
 message AssignDriverRequest {
   int64 order_id = 1;
-  int64 driver_id = 2;
 }
 
 message AssignDriverResponse {
-  bool success = 1;
-  string message = 2;
+  int64 driver_id = 1;
+  int64 order_id = 2;
+  bool success = 3;
+  string message = 4;
+
 }
 
 message GetOrderDetailsRequest {
@@ -87,10 +89,9 @@ message Order {
 }
 
 message OrderItem {
-  int64 id = 1;
-  int64 order_id = 2;
-  int64 product_id = 3;
-  string product_name = 4;
-  double price = 5;
+  int64 order_id = 1;
+  int64 product_id = 2;
+  string product_name = 3;
+  double price = 4;
 }
 

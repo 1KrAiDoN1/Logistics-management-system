@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package driver;
+option go_package = "/driver";
+
+import "google/protobuf/empty.proto";
+
+// Driver Service
+service DriverService {
+  rpc FindSuitableDriver(FindDriverRequest) returns (FindDriverResponse);
+  rpc UpdateDriverStatus(UpdateDriverStatusRequest) returns (UpdateDriverStatusResponse);
+  rpc GetAvailableDrivers(google.protobuf.Empty) returns (GetAvailableDriversResponse);
+  rpc CompleteOrder(CompleteOrderRequest) returns (CompleteOrderResponse);
+}
+
+message FindDriverRequest {
+  int64 order_id = 1;
+}
+
+message FindDriverResponse {
+  Driver driver = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+message UpdateDriverStatusRequest {
+  int64 driver_id = 1;
+  string status = 2;
+}
+
+message UpdateDriverStatusResponse {
+  bool success = 1;
+}
+
+message GetAvailableDriversResponse {
+  repeated Driver drivers = 1;
+}
+
+message CompleteOrderRequest {
+  int64 driver_id = 1;
+  int64 order_id = 2;
+}
+
+message CompleteOrderResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message Driver {
+  int64 driver_id = 1;
+  string name = 2;
+  string phone = 3;
+  string status = 4;
+  Vehicle vehicle = 5;
+}
+
+message Vehicle {
+  string model = 2;
+  string license_plate = 3;
+}

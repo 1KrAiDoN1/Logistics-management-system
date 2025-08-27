@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	authpb "logistics/api/protobuf/auth_service"
+	driverpb "logistics/api/protobuf/driver_service"
 	orderpb "logistics/api/protobuf/order_service"
+	warehousepb "logistics/api/protobuf/warehouse_service"
 	"logistics/configs"
 	"logistics/internal/services/api-gateway/handler"
 	"logistics/internal/services/api-gateway/middleware"
@@ -18,7 +20,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -49,7 +50,7 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 		logger.Error("Failed to create gRPC client for driver service", slogger.Err(err))
 		return nil
 	}
-	orderGRPCConn, err := grpc.NewClient(microservices_config.DriverGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	orderGRPCConn, err := grpc.NewClient(microservices_config.OrderGRPCServiceConfig.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		logger.Error("Failed to create gRPC client for order service", slogger.Err(err))
 		return nil
@@ -120,7 +121,7 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) setupRoutes() {
-	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := s.router.Group("/api/v1")
 
 	// Public routes
@@ -130,7 +131,7 @@ func (s *Server) setupRoutes() {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(s.authGRPCClient))
 	{
-		routes.SetupUserRoutes(protected, s.handlers.UserHandlerInterface)
+		// routes.SetupUserRoutes(protected, s.handlers.UserHandlerInterface)
 		// routes.SetupCategoryRoutes(protected, s.handlers.CategoryHandlerInterface)
 		// routes.SetupExpenseRoutes(protected, s.handlers.ExpenseHandlerInterface)
 		// routes.SetupBudgetRoutes(protected, s.handlers.BudgetHandlerInterface)

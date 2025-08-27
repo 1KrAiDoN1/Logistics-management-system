@@ -44,12 +44,13 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	})
 	if err != nil {
 		h.logger.Error("Failed to register user", slogger.Err(err), slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)))
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	h.logger.Info("User registered successfully", slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusCreated)))
 	c.JSON(http.StatusCreated, gin.H{"user": user})
 }
+
 func (h *AuthHandler) SignIn(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
