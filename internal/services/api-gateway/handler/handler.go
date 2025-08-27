@@ -11,15 +11,13 @@ import (
 type Handlers struct {
 	AuthHandlerInterface
 	OrderHandlerInterface
-	DriverHandlerInterface
 	WarehouseHandlerInterface
 }
 
 func NewHandlers(logger *slog.Logger, authGRPCClient authpb.AuthServiceClient, orderGRPCClient orderpb.OrderServiceClient, driverGRPCClient driverpb.DriverServiceClient, warehouseGRPCClient warehousepb.WarehouseServiceClient) *Handlers {
 	return &Handlers{
 		AuthHandlerInterface:      NewAuthHandler(logger, authGRPCClient),
-		OrderHandlerInterface:     NewOrderHandler(logger, orderGRPCClient),
-		DriverHandlerInterface:    NewDriverHandler(logger, driverGRPCClient),
+		OrderHandlerInterface:     NewOrderHandler(logger, orderGRPCClient, driverGRPCClient, warehouseGRPCClient),
 		WarehouseHandlerInterface: NewWarehouseHandler(logger, warehouseGRPCClient),
 	}
 }

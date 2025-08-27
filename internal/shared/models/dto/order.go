@@ -17,17 +17,16 @@ type CreateOrderRequest struct {
 }
 
 type CreateOrderItem struct {
-	ProductID int64   `json:"product_id" validate:"required"`
-	Quantity  int32   `json:"quantity" validate:"required,min=1"`
-	Price     float64 `json:"price" validate:"required,min=0"`
+	ProductID   int64   `json:"product_id" validate:"required"`
+	ProductName string  `json:"product_name" validate:"required"`
+	Quantity    int32   `json:"quantity" validate:"required,min=1"`
+	Price       float64 `json:"price" validate:"required,min=0"`
 }
 
 // CreateOrderResponse - ответ на создание заказа
 type CreateOrderResponse struct {
-	Order             *entity.Order `json:"order"`
-	ReservationID     string        `json:"reservation_id"`     // ID резервирования товара
-	EstimatedDelivery *time.Time    `json:"estimated_delivery"` // примерное время доставки
-	Message           string        `json:"message"`
+	Order   *entity.Order `json:"order"`
+	Message string        `json:"message"`
 }
 
 // OrderStatusResponse - ответ со статусом заказа
