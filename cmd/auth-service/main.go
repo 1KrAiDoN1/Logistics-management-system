@@ -32,6 +32,7 @@ func main() {
 		os.Exit(1)
 	}
 	dbpool := db.GetPool()
+
 	redis, err := redis.NewRedisClient(authGRPCServiceConfig.RedisConfig)
 	if err != nil {
 		log.Error("Failed to connect to Redis", slogger.Err(err))

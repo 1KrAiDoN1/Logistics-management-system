@@ -20,6 +20,8 @@ type OrderHandlerInterface interface {
 	AssignDriver(c *gin.Context)
 }
 
+type DriverHandlerInterface interface {
+}
 type DeliveryHandlerInterface interface {
 	GetDeliveries(c *gin.Context)
 }

@@ -33,7 +33,7 @@ func NewApp(log *slog.Logger, authGRPCService *auth_grpc_service.AuthGRPCService
 }
 
 func (a *AuthGRPCApp) Run() error {
-	l, err := net.Listen("tcp", fmt.Sprintf(":%s", a.AuthGRPCConfig.Address))
+	l, err := net.Listen("tcp", a.AuthGRPCConfig.Address)
 	if err != nil {
 		return fmt.Errorf("failed to starting AuthGRPCServer: %w", err)
 	}

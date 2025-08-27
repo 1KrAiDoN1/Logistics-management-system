@@ -3,6 +3,7 @@ package main
 import (
 	"log/slog"
 	"logistics/configs"
+	httpserver "logistics/internal/services/api-gateway/http-server"
 	"logistics/pkg/cache/redis"
 	"logistics/pkg/lib/logger/slogger"
 	"os"
@@ -41,5 +42,10 @@ func main() {
 		slog.Any("driver_service", microservices_config.DriverGRPCServiceConfig),
 		slog.Any("warehouse_service", microservices_config.WarehouseGRPCServiceConfig),
 	)
+	server := httpserver.NewServer(log, microservices_config)
+	if err := server.Run(); err != nil {
+		log.Error("Failed to run HTTP server", slogger.Err(err))
+		os.Exit(1)
+	}
 
 }

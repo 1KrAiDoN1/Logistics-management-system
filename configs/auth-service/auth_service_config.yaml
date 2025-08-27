@@ -1,4 +1,4 @@
-address: "40001"
+address: "0.0.0.0:40001"
 database:
   driver: postgres
   host: localhost 
