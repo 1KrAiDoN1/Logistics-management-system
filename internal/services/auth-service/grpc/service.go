@@ -2,10 +2,14 @@ package auth_grpc_service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	authpb "logistics/api/protobuf/auth_service"
 	"logistics/internal/services/auth-service/domain"
+	"logistics/internal/shared/entity"
+	"logistics/pkg/lib/utils"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
@@ -31,10 +35,36 @@ func RegisterAuthServiceServer(s *grpc.Server, srv *AuthGRPCService) {
 	authpb.RegisterAuthServiceServer(s, srv)
 }
 func (s *AuthGRPCService) SignUp(ctx context.Context, req *authpb.SignUpRequest) (*authpb.SignUpResponse, error) {
+	if req.Password != req.ConfirmPassword {
+		return nil, errors.New("password and confirm password do not match")
+	}
+	exists, err := s.authrepository.IsUserExists(ctx, req.Email)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check user existence: %w", err)
+	}
+	if exists {
+		return nil, errors.New("user with this email already exists")
+	}
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+	user := &entity.User{
+		Email:              req.Email,
+		Password:           hashedPassword,
+		FirstName:          req.FirstName,
+		LastName:           req.LastName,
+		TimeOfRegistration: time.Now().Unix(),
+	}
+
+	userID, err := s.authrepository.CreateUser(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
 	// Реализация логики регистрации пользователя
-	fmt.Println("SignUp called with:", req)
 	return &authpb.SignUpResponse{
-		UserId:    1,
+		UserId:    userID,
 		Email:     req.Email,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
@@ -51,6 +81,7 @@ func (s *AuthGRPCService) SignIn(ctx context.Context, req *authpb.SignInRequest)
 		LastName:    "Doe",
 		AccessToken: "example_token",
 	}, nil
+	//ДОБАВИТЬ КЭШИРОВАНИЕ
 }
 
 func (s *AuthGRPCService) Logout(ctx context.Context, req *authpb.LogoutRequest) (*emptypb.Empty, error) {
