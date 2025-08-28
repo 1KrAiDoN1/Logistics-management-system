@@ -1,3 +1,5 @@
 .env
 **/.env
 /.env
+internal/services/api-gateway/.DS_Store
+internal/services/api-gateway/handler/.DS_Store
