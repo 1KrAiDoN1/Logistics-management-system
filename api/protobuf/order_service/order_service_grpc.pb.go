@@ -25,6 +25,7 @@ const (
 	OrderService_GetOrderDetails_FullMethodName   = "/order.OrderService/GetOrderDetails"
 	OrderService_GetOrdersByUser_FullMethodName   = "/order.OrderService/GetOrdersByUser"
 	OrderService_CompleteDelivery_FullMethodName  = "/order.OrderService/CompleteDelivery"
+	OrderService_GetDeliveries_FullMethodName     = "/order.OrderService/GetDeliveries"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -39,6 +40,7 @@ type OrderServiceClient interface {
 	GetOrderDetails(ctx context.Context, in *GetOrderDetailsRequest, opts ...grpc.CallOption) (*GetOrderDetailsResponse, error)
 	GetOrdersByUser(ctx context.Context, in *GetOrdersByUserRequest, opts ...grpc.CallOption) (*GetOrdersByUserResponse, error)
 	CompleteDelivery(ctx context.Context, in *CompleteDeliveryRequest, opts ...grpc.CallOption) (*CompleteDeliveryResponse, error)
+	GetDeliveries(ctx context.Context, in *GetDeliveriesByUserRequest, opts ...grpc.CallOption) (*GetDeliveriesByUserResponse, error)
 }
 
 type orderServiceClient struct {
@@ -109,6 +111,16 @@ func (c *orderServiceClient) CompleteDelivery(ctx context.Context, in *CompleteD
 	return out, nil
 }
 
+func (c *orderServiceClient) GetDeliveries(ctx context.Context, in *GetDeliveriesByUserRequest, opts ...grpc.CallOption) (*GetDeliveriesByUserResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDeliveriesByUserResponse)
+	err := c.cc.Invoke(ctx, OrderService_GetDeliveries_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
@@ -121,6 +133,7 @@ type OrderServiceServer interface {
 	GetOrderDetails(context.Context, *GetOrderDetailsRequest) (*GetOrderDetailsResponse, error)
 	GetOrdersByUser(context.Context, *GetOrdersByUserRequest) (*GetOrdersByUserResponse, error)
 	CompleteDelivery(context.Context, *CompleteDeliveryRequest) (*CompleteDeliveryResponse, error)
+	GetDeliveries(context.Context, *GetDeliveriesByUserRequest) (*GetDeliveriesByUserResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -148,6 +161,9 @@ func (UnimplementedOrderServiceServer) GetOrdersByUser(context.Context, *GetOrde
 }
 func (UnimplementedOrderServiceServer) CompleteDelivery(context.Context, *CompleteDeliveryRequest) (*CompleteDeliveryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompleteDelivery not implemented")
+}
+func (UnimplementedOrderServiceServer) GetDeliveries(context.Context, *GetDeliveriesByUserRequest) (*GetDeliveriesByUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDeliveries not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 func (UnimplementedOrderServiceServer) testEmbeddedByValue()                      {}
@@ -278,6 +294,24 @@ func _OrderService_CompleteDelivery_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderService_GetDeliveries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDeliveriesByUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetDeliveries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetDeliveries_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetDeliveries(ctx, req.(*GetDeliveriesByUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrderService_ServiceDesc is the grpc.ServiceDesc for OrderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -308,6 +342,10 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompleteDelivery",
 			Handler:    _OrderService_CompleteDelivery_Handler,
+		},
+		{
+			MethodName: "GetDeliveries",
+			Handler:    _OrderService_GetDeliveries_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

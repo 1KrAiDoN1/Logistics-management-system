@@ -12,8 +12,6 @@ type CreateOrderRequest struct {
 	PickupAddress   string            `json:"pickup_address" validate:"required"`
 	Items           []CreateOrderItem `json:"items" validate:"required,min=1"`
 	Priority        string            `json:"priority" validate:"omitempty,oneof=low normal high urgent"`
-	ScheduledAt     *time.Time        `json:"scheduled_at"` // когда доставить (опционально)
-	Notes           string            `json:"notes"`
 }
 
 type CreateOrderItem struct {
