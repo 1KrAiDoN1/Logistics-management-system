@@ -173,8 +173,7 @@ func (x *GetWarehouseStockResponse) GetStocks() []*Stock {
 
 type UpdateStockRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProductId     int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
-	Quantity      int32                  `protobuf:"varint,3,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Items         []*StockItem           `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -209,18 +208,11 @@ func (*UpdateStockRequest) Descriptor() ([]byte, []int) {
 	return file_warehouse_service_warehouse_service_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *UpdateStockRequest) GetProductId() int64 {
+func (x *UpdateStockRequest) GetItems() []*StockItem {
 	if x != nil {
-		return x.ProductId
+		return x.Items
 	}
-	return 0
-}
-
-func (x *UpdateStockRequest) GetQuantity() int32 {
-	if x != nil {
-		return x.Quantity
-	}
-	return 0
+	return nil
 }
 
 type UpdateStockResponse struct {
@@ -269,7 +261,7 @@ func (x *UpdateStockResponse) GetSuccess() bool {
 
 type StockItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProductId     int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	ProductName   string                 `protobuf:"bytes,1,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
 	Quantity      int32                  `protobuf:"varint,2,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -305,11 +297,11 @@ func (*StockItem) Descriptor() ([]byte, []int) {
 	return file_warehouse_service_warehouse_service_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *StockItem) GetProductId() int64 {
+func (x *StockItem) GetProductName() string {
 	if x != nil {
-		return x.ProductId
+		return x.ProductName
 	}
-	return 0
+	return ""
 }
 
 func (x *StockItem) GetQuantity() int32 {
@@ -321,7 +313,7 @@ func (x *StockItem) GetQuantity() int32 {
 
 type StockItemWithWarehouse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ProductId     int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	ProductName   string                 `protobuf:"bytes,1,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
 	Quantity      int32                  `protobuf:"varint,2,opt,name=quantity,proto3" json:"quantity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -357,11 +349,11 @@ func (*StockItemWithWarehouse) Descriptor() ([]byte, []int) {
 	return file_warehouse_service_warehouse_service_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *StockItemWithWarehouse) GetProductId() int64 {
+func (x *StockItemWithWarehouse) GetProductName() string {
 	if x != nil {
-		return x.ProductId
+		return x.ProductName
 	}
-	return 0
+	return ""
 }
 
 func (x *StockItemWithWarehouse) GetQuantity() int32 {
@@ -451,20 +443,16 @@ const file_warehouse_service_warehouse_service_proto_rawDesc = "" +
 	"\x05items\x18\x02 \x03(\v2!.warehouse.StockItemWithWarehouseR\x05items\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\"E\n" +
 	"\x19GetWarehouseStockResponse\x12(\n" +
-	"\x06stocks\x18\x01 \x03(\v2\x10.warehouse.StockR\x06stocks\"O\n" +
-	"\x12UpdateStockRequest\x12\x1d\n" +
-	"\n" +
-	"product_id\x18\x02 \x01(\x03R\tproductId\x12\x1a\n" +
-	"\bquantity\x18\x03 \x01(\x05R\bquantity\"/\n" +
+	"\x06stocks\x18\x01 \x03(\v2\x10.warehouse.StockR\x06stocks\"@\n" +
+	"\x12UpdateStockRequest\x12*\n" +
+	"\x05items\x18\x01 \x03(\v2\x14.warehouse.StockItemR\x05items\"/\n" +
 	"\x13UpdateStockResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\"F\n" +
-	"\tStockItem\x12\x1d\n" +
-	"\n" +
-	"product_id\x18\x01 \x01(\x03R\tproductId\x12\x1a\n" +
-	"\bquantity\x18\x02 \x01(\x05R\bquantity\"S\n" +
-	"\x16StockItemWithWarehouse\x12\x1d\n" +
-	"\n" +
-	"product_id\x18\x01 \x01(\x03R\tproductId\x12\x1a\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\"J\n" +
+	"\tStockItem\x12!\n" +
+	"\fproduct_name\x18\x01 \x01(\tR\vproductName\x12\x1a\n" +
+	"\bquantity\x18\x02 \x01(\x05R\bquantity\"W\n" +
+	"\x16StockItemWithWarehouse\x12!\n" +
+	"\fproduct_name\x18\x01 \x01(\tR\vproductName\x12\x1a\n" +
 	"\bquantity\x18\x02 \x01(\x05R\bquantity\"\xa0\x01\n" +
 	"\x05Stock\x12\x1d\n" +
 	"\n" +
@@ -508,18 +496,19 @@ var file_warehouse_service_warehouse_service_proto_depIdxs = []int32{
 	5, // 0: warehouse.CheckStockRequest.items:type_name -> warehouse.StockItem
 	6, // 1: warehouse.CheckStockResponse.items:type_name -> warehouse.StockItemWithWarehouse
 	7, // 2: warehouse.GetWarehouseStockResponse.stocks:type_name -> warehouse.Stock
-	8, // 3: warehouse.Stock.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 4: warehouse.WarehouseService.CheckStockAvailability:input_type -> warehouse.CheckStockRequest
-	9, // 5: warehouse.WarehouseService.GetWarehouseStock:input_type -> google.protobuf.Empty
-	3, // 6: warehouse.WarehouseService.UpdateStock:input_type -> warehouse.UpdateStockRequest
-	1, // 7: warehouse.WarehouseService.CheckStockAvailability:output_type -> warehouse.CheckStockResponse
-	2, // 8: warehouse.WarehouseService.GetWarehouseStock:output_type -> warehouse.GetWarehouseStockResponse
-	4, // 9: warehouse.WarehouseService.UpdateStock:output_type -> warehouse.UpdateStockResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	5, // 3: warehouse.UpdateStockRequest.items:type_name -> warehouse.StockItem
+	8, // 4: warehouse.Stock.updated_at:type_name -> google.protobuf.Timestamp
+	0, // 5: warehouse.WarehouseService.CheckStockAvailability:input_type -> warehouse.CheckStockRequest
+	9, // 6: warehouse.WarehouseService.GetWarehouseStock:input_type -> google.protobuf.Empty
+	3, // 7: warehouse.WarehouseService.UpdateStock:input_type -> warehouse.UpdateStockRequest
+	1, // 8: warehouse.WarehouseService.CheckStockAvailability:output_type -> warehouse.CheckStockResponse
+	2, // 9: warehouse.WarehouseService.GetWarehouseStock:output_type -> warehouse.GetWarehouseStockResponse
+	4, // 10: warehouse.WarehouseService.UpdateStock:output_type -> warehouse.UpdateStockResponse
+	8, // [8:11] is the sub-list for method output_type
+	5, // [5:8] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_warehouse_service_warehouse_service_proto_init() }
