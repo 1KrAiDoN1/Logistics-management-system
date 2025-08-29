@@ -9,16 +9,13 @@ import (
 type CreateOrderRequest struct {
 	UserID          int64             `json:"user_id" validate:"required"`
 	DeliveryAddress string            `json:"delivery_address" validate:"required"`
-	PickupAddress   string            `json:"pickup_address" validate:"required"`
 	Items           []CreateOrderItem `json:"items" validate:"required,min=1"`
-	Priority        string            `json:"priority" validate:"omitempty,oneof=low normal high urgent"`
 }
 
 type CreateOrderItem struct {
-	ProductID   int64   `json:"product_id" validate:"required"`
-	ProductName string  `json:"product_name" validate:"required"`
-	Quantity    int32   `json:"quantity" validate:"required,min=1"`
-	Price       float64 `json:"price" validate:"required,min=0"`
+	// ProductID   int64   `json:"product_id" validate:"required"`
+	ProductName string `json:"product_name" validate:"required"`
+	Quantity    int32  `json:"quantity" validate:"required,min=1"`
 }
 
 // CreateOrderResponse - ответ на создание заказа

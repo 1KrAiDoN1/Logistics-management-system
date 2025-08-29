@@ -75,8 +75,8 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 		}
 		for i, item := range req.Items {
 			stockReq.Items[i] = &warehousepb.StockItem{
-				ProductId: item.ProductID,
-				Quantity:  int32(item.Quantity),
+				ProductName: item.ProductName,
+				Quantity:    int32(item.Quantity),
 			}
 		}
 
@@ -149,9 +149,9 @@ func convertToOrderItems(createItems []dto.CreateOrderItem) []*orderpb.OrderItem
 
 	for i, item := range createItems {
 		orderItems[i] = &orderpb.OrderItem{
-			ProductId:   item.ProductID,
+			// ProductId:   item.ProductID,
 			ProductName: item.ProductName,
-			Price:       item.Price,
+			Quantity:    item.Quantity,
 		}
 	}
 

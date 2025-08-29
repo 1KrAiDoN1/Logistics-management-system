@@ -761,7 +761,8 @@ type OrderItem struct {
 	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 	ProductId     int64                  `protobuf:"varint,2,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
 	ProductName   string                 `protobuf:"bytes,3,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
-	Price         float64                `protobuf:"fixed64,4,opt,name=price,proto3" json:"price,omitempty"`
+	Quantity      int32                  `protobuf:"varint,4,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Price         float64                `protobuf:"fixed64,5,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -815,6 +816,13 @@ func (x *OrderItem) GetProductName() string {
 		return x.ProductName
 	}
 	return ""
+}
+
+func (x *OrderItem) GetQuantity() int32 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
 }
 
 func (x *OrderItem) GetPrice() float64 {
@@ -965,13 +973,14 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x16\n" +
 	"\x06status\x18\a \x01(\tR\x06status\x12\x1b\n" +
-	"\tdriver_id\x18\b \x01(\x03R\bdriverId\"~\n" +
+	"\tdriver_id\x18\b \x01(\x03R\bdriverId\"\x9a\x01\n" +
 	"\tOrderItem\x12\x19\n" +
 	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x1d\n" +
 	"\n" +
 	"product_id\x18\x02 \x01(\x03R\tproductId\x12!\n" +
-	"\fproduct_name\x18\x03 \x01(\tR\vproductName\x12\x14\n" +
-	"\x05price\x18\x04 \x01(\x01R\x05price\"5\n" +
+	"\fproduct_name\x18\x03 \x01(\tR\vproductName\x12\x1a\n" +
+	"\bquantity\x18\x04 \x01(\x05R\bquantity\x12\x14\n" +
+	"\x05price\x18\x05 \x01(\x01R\x05price\"5\n" +
 	"\x1aGetDeliveriesByUserRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"K\n" +
 	"\x1bGetDeliveriesByUserResponse\x12,\n" +
