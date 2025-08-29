@@ -1,1 +1,2 @@
 testing merge branches
+git ls-files | xargs wc -l
