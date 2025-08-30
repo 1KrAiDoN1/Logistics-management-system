@@ -18,12 +18,12 @@ func main() {
 	orderGRPCServiceConfig, err := orderservice_config.LoadOrderGRPCServiceConfig("configs/order-service/order_service_config.yaml")
 	if err != nil {
 		log.Error("Failed to load order service configuration", slogger.Err(err))
-		defer panic("Failed to load order service config: " + err.Error())
+		os.Exit(1)
 	}
 	db, err := postgres.NewDatabase(ctx, "")
 	if err != nil {
 		log.Error("Failed to connect to the database", slogger.Err(err))
-		defer panic("Failed to connect to the database: " + err.Error())
+		os.Exit(1)
 	}
 	dbpool := db.GetPool()
 
@@ -40,7 +40,7 @@ func main() {
 
 	if err := orderGRPCApp.Run(); err != nil {
 		log.Error("Failed to run auth gRPC application", slogger.Err(err))
-		panic("Failed to run auth gRPC application: " + err.Error())
+		os.Exit(1)
 	}
 
 	log.Info("Order service configuration loaded successfully", "address", orderGRPCServiceConfig.Address)
