@@ -48,4 +48,5 @@ func main() {
 		log.Error("Failed to run auth gRPC application", slogger.Err(err))
 		os.Exit(1)
 	}
+
 }
