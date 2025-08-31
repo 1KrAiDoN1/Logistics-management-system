@@ -20,11 +20,20 @@ func main() {
 		log.Error("Failed to load order service configuration", slogger.Err(err))
 		os.Exit(1)
 	}
+
+	dbConnstr, err := orderGRPCServiceConfig.DSN("DB_ORDER_SERVICE_PASSWORD")
+	if err != nil {
+		log.Error("Failed to get database connection string", slogger.Err(err))
+		os.Exit(1)
+	}
+	_ = dbConnstr
+
 	db, err := postgres.NewDatabase(ctx, "")
 	if err != nil {
 		log.Error("Failed to connect to the database", slogger.Err(err))
 		os.Exit(1)
 	}
+	defer db.Close()
 	dbpool := db.GetPool()
 
 	redis, err := redis.NewRedisClient(orderGRPCServiceConfig.RedisConfig)
@@ -32,6 +41,7 @@ func main() {
 		log.Error("Failed to connect to Redis", slogger.Err(err))
 		os.Exit(1)
 	}
+	defer redis.Close()
 
 	orderGRPCRepository := repository.NewOrderRepository(dbpool)
 	orderGRPCService := orderservice.NewOrderGRPCService(log, orderGRPCRepository, redis.Client)

@@ -20,17 +20,25 @@ func main() {
 		log.Error("Failed to load driver service configuration", slogger.Err(err))
 		os.Exit(1)
 	}
+	dbConnstr, err := driverGRPCServiceConfig.DSN("DB_DRIVER_SERVICE_PASSWORD")
+	if err != nil {
+		log.Error("Failed to get database connection string", slogger.Err(err))
+		os.Exit(1)
+	}
+	_ = dbConnstr
 	db, err := postgres.NewDatabase(ctx, "")
 	if err != nil {
 		log.Error("Failed to connect to the database", slogger.Err(err))
 		os.Exit(1)
 	}
+	defer db.Close()
 
 	redis, err := redis.NewRedisClient(driverGRPCServiceConfig.RedisConfig)
 	if err != nil {
 		log.Error("Failed to connect to Redis", slogger.Err(err))
 		os.Exit(1)
 	}
+	defer redis.Close()
 
 	dbpool := db.GetPool()
 	driverGRPCRepository := repository.NewDriverRepository(dbpool)

@@ -32,12 +32,14 @@ func main() {
 		os.Exit(1)
 	}
 	dbpool := db.GetPool()
+	defer db.Close()
 
 	redis, err := redis.NewRedisClient(authGRPCServiceConfig.RedisConfig)
 	if err != nil {
 		log.Error("Failed to connect to Redis", slogger.Err(err))
 		os.Exit(1)
 	}
+	defer redis.Close()
 
 	authGRPCRepository := auth_grpc_repository.NewAuthRepository(dbpool)
 	authGRPCService := auth_grpc_server.NewAuthGRPCService(log, authGRPCRepository, redis.Client)
