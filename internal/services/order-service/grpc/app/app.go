@@ -35,7 +35,7 @@ func NewApp(log *slog.Logger, orderGRPCService *orderservice.OrderGRPCService, o
 func (a *OrderGRPCApp) Run() error {
 	l, err := net.Listen("tcp", a.OrderGRPCConfig.Address)
 	if err != nil {
-		return fmt.Errorf("failed to starting OrderGRPCServer: %w", err)
+		return fmt.Errorf("failed to start OrderGRPCServer: %w", err)
 	}
 
 	// Канал для ошибок сервера

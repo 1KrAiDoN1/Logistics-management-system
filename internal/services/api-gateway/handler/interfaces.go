@@ -13,6 +13,7 @@ type OrderHandlerInterface interface {
 	GetOrders(c *gin.Context)
 	GetOrderByID(c *gin.Context)
 	AssignDriver(c *gin.Context)
+	CompleteOrder(c *gin.Context)
 	GetDeliveries(c *gin.Context)
 }
 

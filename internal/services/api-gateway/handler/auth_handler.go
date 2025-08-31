@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	authpb "logistics/api/protobuf/auth_service"
+	"logistics/internal/services/api-gateway/middleware"
 	"logistics/internal/shared/models/dto"
 	"logistics/pkg/lib/logger/slogger"
 	"net/http"
@@ -86,12 +87,25 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 	})
 }
 func (h *AuthHandler) Logout(c *gin.Context) {
-
-	// if err != nil {
-	// 	h.logger.Error("Failed to get refresh token from cookie", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
-	// 	c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-	// 	return
-	// }
-	// удалить токены надо из редиса
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	userID, err := middleware.GetUserId(c)
+	if err != nil {
+		h.logger.Error("getting user_id failed", slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)), slogger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	_, err = h.authGRPCClient.Logout(ctx, &authpb.LogoutRequest{
+		UserId: int64(userID),
+	})
+	if err != nil {
+		h.logger.Error("logout user failed", slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)), slogger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }

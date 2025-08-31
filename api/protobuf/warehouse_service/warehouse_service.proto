@@ -29,8 +29,7 @@ message GetWarehouseStockResponse {
 }
 
 message UpdateStockRequest {
-  int64 product_id = 2;
-  int32 quantity = 3;
+  repeated StockItem items = 1;
 }
 
 message UpdateStockResponse {
@@ -38,12 +37,12 @@ message UpdateStockResponse {
 }
 
 message StockItem {
-  int64 product_id = 1;
+  string product_name = 1;
   int32 quantity = 2;
 }
 
 message StockItemWithWarehouse {
-  int64 product_id = 1;
+  string product_name = 1;
   int32 quantity = 2;
 }
 

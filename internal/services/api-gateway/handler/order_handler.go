@@ -12,6 +12,7 @@ import (
 	"logistics/internal/shared/models/dto"
 	"logistics/pkg/lib/logger/slogger"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -64,7 +65,7 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 		mu          sync.RWMutex // защищаем результаты
 	)
 
-	// Горутина 1: Проверка наличия товаров на складе
+	// Проверка наличия товаров на складе
 	g.Go(func() error {
 		o.stockCheckWorkers <- struct{}{} // семафор для ограничения горутин
 		defer func() { <-o.stockCheckWorkers }()
@@ -74,8 +75,8 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 		}
 		for i, item := range req.Items {
 			stockReq.Items[i] = &warehousepb.StockItem{
-				ProductId: item.ProductID,
-				Quantity:  int32(item.Quantity),
+				ProductName: item.ProductName,
+				Quantity:    int32(item.Quantity),
 			}
 		}
 
@@ -148,9 +149,9 @@ func convertToOrderItems(createItems []dto.CreateOrderItem) []*orderpb.OrderItem
 
 	for i, item := range createItems {
 		orderItems[i] = &orderpb.OrderItem{
-			ProductId:   item.ProductID,
+			// ProductId:   item.ProductID,
 			ProductName: item.ProductName,
-			Price:       item.Price,
+			Quantity:    item.Quantity,
 		}
 	}
 
@@ -158,15 +159,158 @@ func convertToOrderItems(createItems []dto.CreateOrderItem) []*orderpb.OrderItem
 }
 
 func (o *OrderHandler) GetOrders(c *gin.Context) {
-	// Implementation for getting orders
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	userID, err := middleware.GetUserId(c)
+	if err != nil {
+		o.logger.Error("getting user_id failed", slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)), slogger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	ordersReq := &orderpb.GetOrdersByUserRequest{
+		UserId: int64(userID),
+	}
+	orders, err := o.orderGRPCClient.GetOrdersByUser(ctx, ordersReq)
+	if err != nil {
+		o.logger.Error("Failed to get orders", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to get orders",
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, orders)
 }
 func (o *OrderHandler) GetOrderByID(c *gin.Context) {
-	// Implementation for getting an order by ID
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	userID, err := middleware.GetUserId(c)
+	if err != nil {
+		o.logger.Error("getting user_id failed", slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)), slogger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	orderID, err := strconv.Atoi(c.Param("order_id"))
+	if err != nil {
+		o.logger.Error("Invalid order_id", slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)), slogger.Err(err))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid order_id",
+		})
+		return
+	}
+
+	orderReq := &orderpb.GetOrderDetailsRequest{
+		UserId:  int64(userID),
+		OrderId: int64(orderID),
+	}
+	order, err := o.orderGRPCClient.GetOrderDetails(ctx, orderReq)
+	if err != nil {
+		o.logger.Error("Failed to get order details", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to get order details",
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, order)
 }
 func (o *OrderHandler) AssignDriver(c *gin.Context) {
-	// Implementation for assigning a driver to an order
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	userID, err := middleware.GetUserId(c)
+	if err != nil {
+		o.logger.Error("getting user_id failed", slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)), slogger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	orderID, err := strconv.Atoi(c.Param("order_id"))
+	if err != nil {
+		o.logger.Error("Invalid order_id", slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)), slogger.Err(err))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid order_id",
+		})
+		return
+	}
+	assignReq := &orderpb.AssignDriverRequest{
+		UserId:  int64(userID),
+		OrderId: int64(orderID),
+	}
+	assignResp, err := o.orderGRPCClient.AssignDriver(ctx, assignReq)
+	if err != nil {
+		o.logger.Error("Failed to assign driver", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to assign driver",
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, assignResp)
+
 }
 
 func (o *OrderHandler) GetDeliveries(c *gin.Context) {
-	// Implementation for getting deliveries
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	userID, err := middleware.GetUserId(c)
+	if err != nil {
+		o.logger.Error("getting user_id failed", slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)), slogger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	deliveriesReq := &orderpb.GetDeliveriesByUserRequest{
+		UserId: int64(userID),
+	}
+	deliveries, err := o.orderGRPCClient.GetDeliveries(ctx, deliveriesReq)
+	if err != nil {
+		o.logger.Error("Failed to get deliveries", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to get deliveries",
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, deliveries)
+}
+
+func (o *OrderHandler) CompleteOrder(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	userID, err := middleware.GetUserId(c)
+	if err != nil {
+		o.logger.Error("getting user_id failed", slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)), slogger.Err(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	orderID, err := strconv.Atoi(c.Param("order_id"))
+	if err != nil {
+		o.logger.Error("Invalid order_id", slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)), slogger.Err(err))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid order_id",
+		})
+		return
+	}
+	completeReq := &orderpb.CompleteDeliveryRequest{
+		UserId:  int64(userID),
+		OrderId: int64(orderID),
+	}
+	completeResp, err := o.orderGRPCClient.CompleteDelivery(ctx, completeReq)
+	if err != nil {
+		o.logger.Error("Failed to complete order", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to complete order",
+			"message": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, completeResp)
 }

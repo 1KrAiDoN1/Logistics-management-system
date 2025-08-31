@@ -1,6 +1,18 @@
 package domain
 
+import (
+	"context"
+	"logistics/internal/shared/entity"
+)
+
 type AuthRepositoryInterface interface {
+	IsUserExists(ctx context.Context, email string) (bool, error)
+	CreateUser(ctx context.Context, user *entity.User) (int64, error)
+	CheckUserVerification(ctx context.Context, email string, hashpassword string) (*entity.User, error)
+	SaveNewRefreshToken(ctx context.Context, userID int64, refreshToken string) error
+	RemoveRefreshToken(ctx context.Context, userID int64, refreshToken string) error
+	GetUserIDbyRefreshToken(ctx context.Context, refreshToken string) (int64, error)
+	Logout(ctx context.Context, userID int64) error
 	// SignUp creates a new user in the database.
 	// SignUp(email, password, firstName, lastName string) (uint, error)
 	// // SignIn checks user credentials and returns user ID if valid.

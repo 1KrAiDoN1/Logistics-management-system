@@ -13,6 +13,7 @@ service OrderService {
   rpc GetOrderDetails(GetOrderDetailsRequest) returns (GetOrderDetailsResponse);
   rpc GetOrdersByUser(GetOrdersByUserRequest) returns (GetOrdersByUserResponse);
   rpc CompleteDelivery(CompleteDeliveryRequest) returns (CompleteDeliveryResponse);
+  rpc GetDeliveries(GetDeliveriesByUserRequest) returns (GetDeliveriesByUserResponse);
 }
 
 // Messages
@@ -39,7 +40,8 @@ message UpdateOrderStatusResponse {
 }
 
 message AssignDriverRequest {
-  int64 order_id = 1;
+  int64 user_id = 1;
+  int64 order_id = 2;
 }
 
 message AssignDriverResponse {
@@ -51,7 +53,9 @@ message AssignDriverResponse {
 }
 
 message GetOrderDetailsRequest {
-  int64 order_id = 1;
+  int64 user_id = 1;
+  int64 order_id = 2;
+  
 }
 
 message GetOrderDetailsResponse {
@@ -59,8 +63,8 @@ message GetOrderDetailsResponse {
 }
 
 message CompleteDeliveryRequest {
-  int64 order_id = 1;
-  int64 driver_id = 2;
+  int64 user_id = 1;
+  int64 order_id = 2;
 }
 
 message CompleteDeliveryResponse {
@@ -92,6 +96,15 @@ message OrderItem {
   int64 order_id = 1;
   int64 product_id = 2;
   string product_name = 3;
-  double price = 4;
+  int32 quantity = 4;
+  double price = 5;
 }
 
+
+message GetDeliveriesByUserRequest {
+  int64 user_id = 1;
+}
+
+message GetDeliveriesByUserResponse {
+  repeated Order deliveries = 1;
+}

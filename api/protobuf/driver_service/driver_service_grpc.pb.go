@@ -23,7 +23,6 @@ const (
 	DriverService_FindSuitableDriver_FullMethodName  = "/driver.DriverService/FindSuitableDriver"
 	DriverService_UpdateDriverStatus_FullMethodName  = "/driver.DriverService/UpdateDriverStatus"
 	DriverService_GetAvailableDrivers_FullMethodName = "/driver.DriverService/GetAvailableDrivers"
-	DriverService_CompleteOrder_FullMethodName       = "/driver.DriverService/CompleteOrder"
 )
 
 // DriverServiceClient is the client API for DriverService service.
@@ -35,7 +34,6 @@ type DriverServiceClient interface {
 	FindSuitableDriver(ctx context.Context, in *FindDriverRequest, opts ...grpc.CallOption) (*FindDriverResponse, error)
 	UpdateDriverStatus(ctx context.Context, in *UpdateDriverStatusRequest, opts ...grpc.CallOption) (*UpdateDriverStatusResponse, error)
 	GetAvailableDrivers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAvailableDriversResponse, error)
-	CompleteOrder(ctx context.Context, in *CompleteOrderRequest, opts ...grpc.CallOption) (*CompleteOrderResponse, error)
 }
 
 type driverServiceClient struct {
@@ -76,16 +74,6 @@ func (c *driverServiceClient) GetAvailableDrivers(ctx context.Context, in *empty
 	return out, nil
 }
 
-func (c *driverServiceClient) CompleteOrder(ctx context.Context, in *CompleteOrderRequest, opts ...grpc.CallOption) (*CompleteOrderResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CompleteOrderResponse)
-	err := c.cc.Invoke(ctx, DriverService_CompleteOrder_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // DriverServiceServer is the server API for DriverService service.
 // All implementations must embed UnimplementedDriverServiceServer
 // for forward compatibility.
@@ -95,7 +83,6 @@ type DriverServiceServer interface {
 	FindSuitableDriver(context.Context, *FindDriverRequest) (*FindDriverResponse, error)
 	UpdateDriverStatus(context.Context, *UpdateDriverStatusRequest) (*UpdateDriverStatusResponse, error)
 	GetAvailableDrivers(context.Context, *emptypb.Empty) (*GetAvailableDriversResponse, error)
-	CompleteOrder(context.Context, *CompleteOrderRequest) (*CompleteOrderResponse, error)
 	mustEmbedUnimplementedDriverServiceServer()
 }
 
@@ -114,9 +101,6 @@ func (UnimplementedDriverServiceServer) UpdateDriverStatus(context.Context, *Upd
 }
 func (UnimplementedDriverServiceServer) GetAvailableDrivers(context.Context, *emptypb.Empty) (*GetAvailableDriversResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAvailableDrivers not implemented")
-}
-func (UnimplementedDriverServiceServer) CompleteOrder(context.Context, *CompleteOrderRequest) (*CompleteOrderResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CompleteOrder not implemented")
 }
 func (UnimplementedDriverServiceServer) mustEmbedUnimplementedDriverServiceServer() {}
 func (UnimplementedDriverServiceServer) testEmbeddedByValue()                       {}
@@ -193,24 +177,6 @@ func _DriverService_GetAvailableDrivers_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DriverService_CompleteOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CompleteOrderRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DriverServiceServer).CompleteOrder(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: DriverService_CompleteOrder_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DriverServiceServer).CompleteOrder(ctx, req.(*CompleteOrderRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // DriverService_ServiceDesc is the grpc.ServiceDesc for DriverService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -229,10 +195,6 @@ var DriverService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAvailableDrivers",
 			Handler:    _DriverService_GetAvailableDrivers_Handler,
-		},
-		{
-			MethodName: "CompleteOrder",
-			Handler:    _DriverService_CompleteOrder_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

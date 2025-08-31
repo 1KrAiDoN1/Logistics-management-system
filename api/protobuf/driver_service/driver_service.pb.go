@@ -266,110 +266,6 @@ func (x *GetAvailableDriversResponse) GetDrivers() []*Driver {
 	return nil
 }
 
-type CompleteOrderRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DriverId      int64                  `protobuf:"varint,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
-	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CompleteOrderRequest) Reset() {
-	*x = CompleteOrderRequest{}
-	mi := &file_driver_service_driver_service_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CompleteOrderRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CompleteOrderRequest) ProtoMessage() {}
-
-func (x *CompleteOrderRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_driver_service_driver_service_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CompleteOrderRequest.ProtoReflect.Descriptor instead.
-func (*CompleteOrderRequest) Descriptor() ([]byte, []int) {
-	return file_driver_service_driver_service_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *CompleteOrderRequest) GetDriverId() int64 {
-	if x != nil {
-		return x.DriverId
-	}
-	return 0
-}
-
-func (x *CompleteOrderRequest) GetOrderId() int64 {
-	if x != nil {
-		return x.OrderId
-	}
-	return 0
-}
-
-type CompleteOrderResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CompleteOrderResponse) Reset() {
-	*x = CompleteOrderResponse{}
-	mi := &file_driver_service_driver_service_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CompleteOrderResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CompleteOrderResponse) ProtoMessage() {}
-
-func (x *CompleteOrderResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_driver_service_driver_service_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CompleteOrderResponse.ProtoReflect.Descriptor instead.
-func (*CompleteOrderResponse) Descriptor() ([]byte, []int) {
-	return file_driver_service_driver_service_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *CompleteOrderResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
-}
-
-func (x *CompleteOrderResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 type Driver struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	DriverId      int64                  `protobuf:"varint,1,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
@@ -383,7 +279,7 @@ type Driver struct {
 
 func (x *Driver) Reset() {
 	*x = Driver{}
-	mi := &file_driver_service_driver_service_proto_msgTypes[7]
+	mi := &file_driver_service_driver_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -395,7 +291,7 @@ func (x *Driver) String() string {
 func (*Driver) ProtoMessage() {}
 
 func (x *Driver) ProtoReflect() protoreflect.Message {
-	mi := &file_driver_service_driver_service_proto_msgTypes[7]
+	mi := &file_driver_service_driver_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -408,7 +304,7 @@ func (x *Driver) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Driver.ProtoReflect.Descriptor instead.
 func (*Driver) Descriptor() ([]byte, []int) {
-	return file_driver_service_driver_service_proto_rawDescGZIP(), []int{7}
+	return file_driver_service_driver_service_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Driver) GetDriverId() int64 {
@@ -456,7 +352,7 @@ type Vehicle struct {
 
 func (x *Vehicle) Reset() {
 	*x = Vehicle{}
-	mi := &file_driver_service_driver_service_proto_msgTypes[8]
+	mi := &file_driver_service_driver_service_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -468,7 +364,7 @@ func (x *Vehicle) String() string {
 func (*Vehicle) ProtoMessage() {}
 
 func (x *Vehicle) ProtoReflect() protoreflect.Message {
-	mi := &file_driver_service_driver_service_proto_msgTypes[8]
+	mi := &file_driver_service_driver_service_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -481,7 +377,7 @@ func (x *Vehicle) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Vehicle.ProtoReflect.Descriptor instead.
 func (*Vehicle) Descriptor() ([]byte, []int) {
-	return file_driver_service_driver_service_proto_rawDescGZIP(), []int{8}
+	return file_driver_service_driver_service_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Vehicle) GetModel() string {
@@ -515,13 +411,7 @@ const file_driver_service_driver_service_proto_rawDesc = "" +
 	"\x1aUpdateDriverStatusResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\"G\n" +
 	"\x1bGetAvailableDriversResponse\x12(\n" +
-	"\adrivers\x18\x01 \x03(\v2\x0e.driver.DriverR\adrivers\"N\n" +
-	"\x14CompleteOrderRequest\x12\x1b\n" +
-	"\tdriver_id\x18\x01 \x01(\x03R\bdriverId\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\x03R\aorderId\"K\n" +
-	"\x15CompleteOrderResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x92\x01\n" +
+	"\adrivers\x18\x01 \x03(\v2\x0e.driver.DriverR\adrivers\"\x92\x01\n" +
 	"\x06Driver\x12\x1b\n" +
 	"\tdriver_id\x18\x01 \x01(\x03R\bdriverId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
@@ -530,12 +420,11 @@ const file_driver_service_driver_service_proto_rawDesc = "" +
 	"\avehicle\x18\x05 \x01(\v2\x0f.driver.VehicleR\avehicle\"D\n" +
 	"\aVehicle\x12\x14\n" +
 	"\x05model\x18\x02 \x01(\tR\x05model\x12#\n" +
-	"\rlicense_plate\x18\x03 \x01(\tR\flicensePlate2\xdb\x02\n" +
+	"\rlicense_plate\x18\x03 \x01(\tR\flicensePlate2\x8d\x02\n" +
 	"\rDriverService\x12K\n" +
 	"\x12FindSuitableDriver\x12\x19.driver.FindDriverRequest\x1a\x1a.driver.FindDriverResponse\x12[\n" +
 	"\x12UpdateDriverStatus\x12!.driver.UpdateDriverStatusRequest\x1a\".driver.UpdateDriverStatusResponse\x12R\n" +
-	"\x13GetAvailableDrivers\x12\x16.google.protobuf.Empty\x1a#.driver.GetAvailableDriversResponse\x12L\n" +
-	"\rCompleteOrder\x12\x1c.driver.CompleteOrderRequest\x1a\x1d.driver.CompleteOrderResponseB\tZ\a/driverb\x06proto3"
+	"\x13GetAvailableDrivers\x12\x16.google.protobuf.Empty\x1a#.driver.GetAvailableDriversResponseB\tZ\a/driverb\x06proto3"
 
 var (
 	file_driver_service_driver_service_proto_rawDescOnce sync.Once
@@ -549,33 +438,29 @@ func file_driver_service_driver_service_proto_rawDescGZIP() []byte {
 	return file_driver_service_driver_service_proto_rawDescData
 }
 
-var file_driver_service_driver_service_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_driver_service_driver_service_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_driver_service_driver_service_proto_goTypes = []any{
 	(*FindDriverRequest)(nil),           // 0: driver.FindDriverRequest
 	(*FindDriverResponse)(nil),          // 1: driver.FindDriverResponse
 	(*UpdateDriverStatusRequest)(nil),   // 2: driver.UpdateDriverStatusRequest
 	(*UpdateDriverStatusResponse)(nil),  // 3: driver.UpdateDriverStatusResponse
 	(*GetAvailableDriversResponse)(nil), // 4: driver.GetAvailableDriversResponse
-	(*CompleteOrderRequest)(nil),        // 5: driver.CompleteOrderRequest
-	(*CompleteOrderResponse)(nil),       // 6: driver.CompleteOrderResponse
-	(*Driver)(nil),                      // 7: driver.Driver
-	(*Vehicle)(nil),                     // 8: driver.Vehicle
-	(*emptypb.Empty)(nil),               // 9: google.protobuf.Empty
+	(*Driver)(nil),                      // 5: driver.Driver
+	(*Vehicle)(nil),                     // 6: driver.Vehicle
+	(*emptypb.Empty)(nil),               // 7: google.protobuf.Empty
 }
 var file_driver_service_driver_service_proto_depIdxs = []int32{
-	7, // 0: driver.FindDriverResponse.driver:type_name -> driver.Driver
-	7, // 1: driver.GetAvailableDriversResponse.drivers:type_name -> driver.Driver
-	8, // 2: driver.Driver.vehicle:type_name -> driver.Vehicle
+	5, // 0: driver.FindDriverResponse.driver:type_name -> driver.Driver
+	5, // 1: driver.GetAvailableDriversResponse.drivers:type_name -> driver.Driver
+	6, // 2: driver.Driver.vehicle:type_name -> driver.Vehicle
 	0, // 3: driver.DriverService.FindSuitableDriver:input_type -> driver.FindDriverRequest
 	2, // 4: driver.DriverService.UpdateDriverStatus:input_type -> driver.UpdateDriverStatusRequest
-	9, // 5: driver.DriverService.GetAvailableDrivers:input_type -> google.protobuf.Empty
-	5, // 6: driver.DriverService.CompleteOrder:input_type -> driver.CompleteOrderRequest
-	1, // 7: driver.DriverService.FindSuitableDriver:output_type -> driver.FindDriverResponse
-	3, // 8: driver.DriverService.UpdateDriverStatus:output_type -> driver.UpdateDriverStatusResponse
-	4, // 9: driver.DriverService.GetAvailableDrivers:output_type -> driver.GetAvailableDriversResponse
-	6, // 10: driver.DriverService.CompleteOrder:output_type -> driver.CompleteOrderResponse
-	7, // [7:11] is the sub-list for method output_type
-	3, // [3:7] is the sub-list for method input_type
+	7, // 5: driver.DriverService.GetAvailableDrivers:input_type -> google.protobuf.Empty
+	1, // 6: driver.DriverService.FindSuitableDriver:output_type -> driver.FindDriverResponse
+	3, // 7: driver.DriverService.UpdateDriverStatus:output_type -> driver.UpdateDriverStatusResponse
+	4, // 8: driver.DriverService.GetAvailableDrivers:output_type -> driver.GetAvailableDriversResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
 	3, // [3:3] is the sub-list for extension extendee
 	0, // [0:3] is the sub-list for field type_name
@@ -592,7 +477,7 @@ func file_driver_service_driver_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_driver_service_driver_service_proto_rawDesc), len(file_driver_service_driver_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
