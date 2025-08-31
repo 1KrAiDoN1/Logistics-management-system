@@ -10,7 +10,6 @@ service DriverService {
   rpc FindSuitableDriver(FindDriverRequest) returns (FindDriverResponse);
   rpc UpdateDriverStatus(UpdateDriverStatusRequest) returns (UpdateDriverStatusResponse);
   rpc GetAvailableDrivers(google.protobuf.Empty) returns (GetAvailableDriversResponse);
-  rpc CompleteOrder(CompleteOrderRequest) returns (CompleteOrderResponse);
 }
 
 message FindDriverRequest {
@@ -36,15 +35,7 @@ message GetAvailableDriversResponse {
   repeated Driver drivers = 1;
 }
 
-message CompleteOrderRequest {
-  int64 driver_id = 1;
-  int64 order_id = 2;
-}
 
-message CompleteOrderResponse {
-  bool success = 1;
-  string message = 2;
-}
 
 message Driver {
   int64 driver_id = 1;
