@@ -33,7 +33,7 @@ type OrderStatusResponse struct {
 }
 
 type DriverInfo struct {
-	ID      int64        `json:"id"`
+	// ID      int64        `json:"id"`
 	Name    string       `json:"name"`
 	Phone   string       `json:"phone"`
 	Rating  float64      `json:"rating"`
