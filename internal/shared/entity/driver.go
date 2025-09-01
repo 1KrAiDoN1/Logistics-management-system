@@ -2,12 +2,11 @@ package entity
 
 // Driver - структура водителя
 type Driver struct {
-	ID int64 `json:"id" db:"id"`
-	// UserID        int64        `json:"user_id" db:"user_id"` // связь с пользователем
+	ID            int64        `json:"id" db:"id"`
 	Name          string       `json:"name" db:"name"`
 	Phone         string       `json:"phone" db:"phone"`
-	Email         string       `json:"email" db:"email"`
 	LicenseNumber string       `json:"license_number" db:"license_number"`
+	Car           string       `json:"car" db:"car"`
 	Status        DriverStatus `json:"status" db:"status"`
 }
 
