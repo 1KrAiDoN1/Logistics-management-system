@@ -34,10 +34,10 @@ type OrderStatusResponse struct {
 
 type DriverInfo struct {
 	// ID      int64        `json:"id"`
-	Name    string       `json:"name"`
-	Phone   string       `json:"phone"`
-	Rating  float64      `json:"rating"`
-	Vehicle *VehicleInfo `json:"vehicle,omitempty"`
+	Name    string      `json:"name"`
+	Phone   string      `json:"phone"`
+	Rating  float64     `json:"rating"`
+	Vehicle VehicleInfo `json:"vehicle,omitempty"`
 }
 
 type VehicleInfo struct {

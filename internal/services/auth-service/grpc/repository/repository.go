@@ -17,50 +17,72 @@ func NewAuthRepository(pool *pgxpool.Pool) *AuthRepository {
 	}
 }
 
-func (r *AuthRepository) CreateUser(ctx context.Context, user *entity.User) (int64, error) {
-	// Реализация логики регистрации пользователя в базе данных
-	// Например, вставка данных пользователя в таблицу users
-	return 1, nil // Возвращаем ID нового пользователя
+func (a *AuthRepository) CreateUser(ctx context.Context, user *entity.User) (int64, error) {
+	query := `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`
+	var userID int64
+	err := a.pool.QueryRow(ctx, query, user.Email, user.Password).Scan(&userID)
+	if err != nil {
+		return 0, err
+	}
+	return userID, nil
 }
 
 /// дальше реализация
 
-func (r *AuthRepository) IsUserExists(ctx context.Context, email string) (bool, error) {
-	// Реализация логики проверки существования пользователя в базе данных
-	// Например, выполнение запроса к таблице users по email
-	return false, nil // Возвращаем true, если пользователь существует
+func (a *AuthRepository) IsUserExists(ctx context.Context, email string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
+	var exists bool
+	err := a.pool.QueryRow(ctx, query, email).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
 
-func (r *AuthRepository) CheckUserVerification(ctx context.Context, email string, hashpassword string) (*entity.User, error) {
-	// Реализация логики проверки учетных данных пользователя
-	// Например, выполнение запроса к таблице users по email и hashPassword
-	return &entity.User{
-		ID:       1,
-		Email:    email,
-		Password: hashpassword,
-	}, nil // Возвращаем пользователя, если учетные данные верны
+func (a *AuthRepository) CheckUserVerification(ctx context.Context, email string, hashPassword string) (entity.User, error) {
+	query := `SELECT id, email, first_name, last_name, password FROM users WHERE email = $1 AND password = $2`
+	var user entity.User
+	err := a.pool.QueryRow(ctx, query, email, hashPassword).Scan(&user.ID, &user.Email, &user.FirstName, &user.LastName, &user.Password)
+	if err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
+
 }
 
-func (r *AuthRepository) SaveNewRefreshToken(ctx context.Context, userID int64, refreshToken string) error {
-	// Реализация логики сохранения нового refresh токена в базе данных
-	// Например, вставка данных в таблицу refresh_tokens
+func (a *AuthRepository) SaveNewRefreshToken(ctx context.Context, userID int64, refreshToken string) error {
+	query := `INSERT INTO refresh_tokens (user_id, token) VALUES ($1, $2)`
+	_, err := a.pool.Exec(ctx, query, userID, refreshToken)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (r *AuthRepository) RemoveRefreshToken(ctx context.Context, userID int64, refreshToken string) error {
-	// Реализация логики удаления refresh токена из базы данных
-	// Например, удаление записи из таблицы refresh_tokens
+func (a *AuthRepository) RemoveRefreshToken(ctx context.Context, userID int64, refreshToken string) error {
+	query := `DELETE FROM refresh_tokens WHERE user_id = $1 AND token = $2`
+	_, err := a.pool.Exec(ctx, query, userID, refreshToken)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (r *AuthRepository) GetUserIDbyRefreshToken(ctx context.Context, refreshToken string) (int64, error) {
-	// Реализация логики получения userID по refresh токену из базы данных
-	// Например, выполнение запроса к таблице refresh_tokens
-	return 1, nil // Возвращаем userID, если токен найден
+func (a *AuthRepository) GetUserIDbyRefreshToken(ctx context.Context, refreshToken string) (int64, error) {
+	query := `SELECT user_id FROM refresh_tokens WHERE token = $1`
+	var userID int64
+	err := a.pool.QueryRow(ctx, query, refreshToken).Scan(&userID)
+	if err != nil {
+		return 0, err
+	}
+	return userID, nil
 }
 
-func (r *AuthRepository) Logout(ctx context.Context, userID int64) error {
-	// Реализация логики выхода пользователя из системы
-	// Например, удаление всех refresh токенов пользователя из базы данных
+func (a *AuthRepository) Logout(ctx context.Context, userID int64) error {
+	query := `DELETE FROM refresh_tokens WHERE user_id = $1`
+	_, err := a.pool.Exec(ctx, query, userID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
