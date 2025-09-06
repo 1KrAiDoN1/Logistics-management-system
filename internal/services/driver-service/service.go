@@ -2,13 +2,18 @@ package driverservice
 
 import (
 	"context"
+	"encoding/json"
 	"log/slog"
 	driverpb "logistics/api/protobuf/driver_service"
+	kfk "logistics/internal/kafka"
 	"logistics/internal/services/driver-service/domain"
+	"logistics/internal/shared/entity"
 	"logistics/pkg/lib/logger/slogger"
 	"math/rand"
 	"strconv"
 	"time"
+
+	"github.com/segmentio/kafka-go"
 
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
@@ -19,16 +24,18 @@ import (
 
 type DriverGRPCService struct {
 	driverpb.UnimplementedDriverServiceServer
-	driverRepo  domain.DriverRepositoryInterface
-	logger      *slog.Logger
-	redisClient *redis.Client
+	driverRepo    domain.DriverRepositoryInterface
+	logger        *slog.Logger
+	redisClient   *redis.Client
+	kafkaProducer *kfk.KafkaProducer
 }
 
-func NewDriverGRPCService(logger *slog.Logger, driverRepo domain.DriverRepositoryInterface, redisClient *redis.Client) *DriverGRPCService {
+func NewDriverGRPCService(logger *slog.Logger, driverRepo domain.DriverRepositoryInterface, kafkaProducer *kfk.KafkaProducer, redisClient *redis.Client) *DriverGRPCService {
 	return &DriverGRPCService{
-		driverRepo:  driverRepo,
-		logger:      logger,
-		redisClient: redisClient,
+		driverRepo:    driverRepo,
+		logger:        logger,
+		redisClient:   redisClient,
+		kafkaProducer: kafkaProducer,
 	}
 }
 
@@ -62,6 +69,36 @@ func (d *DriverGRPCService) FindSuitableDriver(ctx context.Context, req *driverp
 	d.logger.Info("suitable driver found",
 		slog.String("driver_id", strconv.Itoa(int(selectedDriver.DriverId))),
 		slog.String("driver_name", selectedDriver.Name))
+
+	msg := entity.DriverKafka{
+		ID:            selectedDriver.DriverId,
+		Name:          selectedDriver.Name,
+		Phone:         selectedDriver.Phone,
+		LicenseNumber: selectedDriver.Vehicle.LicensePlate,
+		Car:           selectedDriver.Vehicle.Model,
+	}
+
+	messageBytes, err := json.Marshal(msg)
+	if err != nil {
+		d.logger.Error("Failed to marshal data", "error", err.Error())
+	}
+
+	err = d.kafkaProducer.SendMessage(ctx, kafka.Message{
+		Value: messageBytes,
+	})
+	if err != nil {
+		d.logger.Error("Failed to send message - Kafka", "error", err.Error())
+	}
+
+	resp, err := d.UpdateDriverStatus(ctx, &driverpb.UpdateDriverStatusRequest{
+		DriverId: selectedDriver.DriverId,
+		Status:   string(entity.DriverStatusBusy),
+	})
+
+	if !resp.Success {
+		d.logger.Error("Failed to update driver status", slog.String("status", "error"), slogger.Err(err))
+		return &driverpb.FindDriverResponse{}, err
+	}
 
 	return &driverpb.FindDriverResponse{
 		Driver:  selectedDriver,
