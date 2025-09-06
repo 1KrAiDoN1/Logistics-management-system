@@ -15,3 +15,8 @@ redis_config:
   dial_timeout_seconds: 5
   read_timeout_seconds: 3
   write_timeout_seconds: 3
+kafka_config:
+  brokers:
+    - "localhost:9092"
+  topic: "order-events"
+
