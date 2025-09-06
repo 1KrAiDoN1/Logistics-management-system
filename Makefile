@@ -37,3 +37,10 @@ proto-warehouse:
 		--go_opt=paths=source_relative \
 		--go-grpc_out=./api/protobuf \
 		--go-grpc_opt=paths=source_relative
+
+
+create-kafka-topics:
+	kafka-topics --bootstrap-server localhost:9092 --create \
+  --topic drivers \
+  --partitions 3 \
+  --replication-factor 1
