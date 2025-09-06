@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log/slog"
+	"logistics/internal/kafka"
 	"logistics/pkg/cache/redis"
 	"logistics/pkg/lib/logger/slogger"
 	"os"
@@ -46,6 +47,7 @@ type ServiceConfig struct {
 	Address     string            `yaml:"address"`
 	DbConfig    DBConfig          `mapstructure:"database"`
 	RedisConfig redis.RedisConfig `mapstructure:"redis_config"`
+	KafkaConfig kafka.KafkaConfig `mapstructure:"kafka_config"`
 }
 type DBConfig struct {
 	Driver string `yaml:"driver"`

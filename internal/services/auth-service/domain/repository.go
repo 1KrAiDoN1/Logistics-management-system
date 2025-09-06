@@ -8,7 +8,7 @@ import (
 type AuthRepositoryInterface interface {
 	IsUserExists(ctx context.Context, email string) (bool, error)
 	CreateUser(ctx context.Context, user *entity.User) (int64, error)
-	CheckUserVerification(ctx context.Context, email string, hashpassword string) (*entity.User, error)
+	CheckUserVerification(ctx context.Context, email string, hashpassword string) (entity.User, error)
 	SaveNewRefreshToken(ctx context.Context, userID int64, refreshToken string) error
 	RemoveRefreshToken(ctx context.Context, userID int64, refreshToken string) error
 	GetUserIDbyRefreshToken(ctx context.Context, refreshToken string) (int64, error)

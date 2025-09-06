@@ -137,9 +137,10 @@ func (x *CreateOrderResponse) GetMessage() string {
 
 type UpdateOrderStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrderId       int64                  `protobuf:"varint,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	DriverId      *int64                 `protobuf:"varint,3,opt,name=driver_id,json=driverId,proto3,oneof" json:"driver_id,omitempty"`
+	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	OrderId       int64                  `protobuf:"varint,2,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	DriverId      int64                  `protobuf:"varint,3,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -174,9 +175,23 @@ func (*UpdateOrderStatusRequest) Descriptor() ([]byte, []int) {
 	return file_order_service_order_service_proto_rawDescGZIP(), []int{2}
 }
 
+func (x *UpdateOrderStatusRequest) GetUserId() int64 {
+	if x != nil {
+		return x.UserId
+	}
+	return 0
+}
+
 func (x *UpdateOrderStatusRequest) GetOrderId() int64 {
 	if x != nil {
 		return x.OrderId
+	}
+	return 0
+}
+
+func (x *UpdateOrderStatusRequest) GetDriverId() int64 {
+	if x != nil {
+		return x.DriverId
 	}
 	return 0
 }
@@ -186,13 +201,6 @@ func (x *UpdateOrderStatusRequest) GetStatus() string {
 		return x.Status
 	}
 	return ""
-}
-
-func (x *UpdateOrderStatusRequest) GetDriverId() int64 {
-	if x != nil && x.DriverId != nil {
-		return *x.DriverId
-	}
-	return 0
 }
 
 type UpdateOrderStatusResponse struct {
@@ -931,13 +939,12 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"\x05items\x18\x03 \x03(\v2\x10.order.OrderItemR\x05items\"S\n" +
 	"\x13CreateOrderResponse\x12\"\n" +
 	"\x05order\x18\x01 \x01(\v2\f.order.OrderR\x05order\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"}\n" +
-	"\x18UpdateOrderStatusRequest\x12\x19\n" +
-	"\border_id\x18\x01 \x01(\x03R\aorderId\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status\x12 \n" +
-	"\tdriver_id\x18\x03 \x01(\x03H\x00R\bdriverId\x88\x01\x01B\f\n" +
-	"\n" +
-	"_driver_id\"O\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\x83\x01\n" +
+	"\x18UpdateOrderStatusRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x19\n" +
+	"\border_id\x18\x02 \x01(\x03R\aorderId\x12\x1b\n" +
+	"\tdriver_id\x18\x03 \x01(\x03R\bdriverId\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\"O\n" +
 	"\x19UpdateOrderStatusResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"I\n" +
@@ -1062,7 +1069,6 @@ func file_order_service_order_service_proto_init() {
 	if File_order_service_order_service_proto != nil {
 		return
 	}
-	file_order_service_order_service_proto_msgTypes[2].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

@@ -31,10 +31,7 @@ func (w *WarehouseRepository) CheckStockAvailability(ctx context.Context, orders
 	}
 
 	// Получаем текущие остатки
-	query := `
-        SELECT product_id, quantity 
-        FROM warehouse_stock 
-        WHERE product_id = ANY($1)`
+	query := `SELECT product_id, quantity FROM warehouse_stock WHERE product_id = ANY($1)`
 
 	rows, err := w.pool.Query(ctx, query, productIDs)
 	if err != nil {

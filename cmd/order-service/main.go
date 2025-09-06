@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	orderservice_config "logistics/configs/order-service"
+	"logistics/internal/kafka"
 	orderservice "logistics/internal/services/order-service"
 	"logistics/internal/services/order-service/grpc/app"
 	"logistics/internal/services/order-service/repository"
@@ -43,8 +44,12 @@ func main() {
 	}
 	defer redis.Close()
 
+	kafkaConsumer := kafka.NewKafkaConsumer(log, orderGRPCServiceConfig.KafkaConfig)
+
+	defer kafkaConsumer.Close()
+
 	orderGRPCRepository := repository.NewOrderRepository(dbpool)
-	orderGRPCService := orderservice.NewOrderGRPCService(log, orderGRPCRepository, redis.Client)
+	orderGRPCService := orderservice.NewOrderGRPCService(log, orderGRPCRepository, kafkaConsumer, redis.Client)
 	orderGRPCApp := app.NewApp(log, orderGRPCService, orderGRPCServiceConfig)
 	log.Info("Auth service configuration loaded successfully", "address", orderGRPCServiceConfig.Address)
 
