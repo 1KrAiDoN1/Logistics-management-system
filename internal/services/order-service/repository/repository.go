@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"logistics/internal/shared/entity"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -19,6 +20,52 @@ func NewOrderRepository(pool *pgxpool.Pool) *OrderRepository {
 }
 
 func (o *OrderRepository) CreateOrder(ctx context.Context, order *entity.Order) (int64, error) {
+	tx, err := o.pool.Begin(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	query := `INSERT INTO orders (user_id, status, delivery_address, total_amount, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+
+	var orderID int64
+	err = tx.QueryRow(ctx, query,
+		order.UserID,
+		order.Status,
+		order.DeliveryAddress,
+		order.TotalAmount,
+		order.CreatedAt,
+	).Scan(&orderID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to insert order: %w", err)
+	}
+
+	if len(order.Items) > 0 {
+		itemsQuery := `INSERT INTO order_items (order_id, product_id, product_name, price, quantity, last_updated) VALUES ($1, $2, $3, $4, $5, $6)`
+
+		batch := &pgx.Batch{}
+		for _, item := range order.Items {
+			batch.Queue(itemsQuery,
+				orderID,
+				item.ProductID,
+				item.ProductName,
+				item.Price,
+				item.Quantity,
+				item.LastUpdated,
+			)
+		}
+
+		br := tx.SendBatch(ctx, batch)
+		if err := br.Close(); err != nil {
+			return 0, fmt.Errorf("failed to insert order items: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return orderID, nil
 
 }
 
@@ -172,9 +219,9 @@ func (o *OrderRepository) GetOrdersByUser(ctx context.Context, userID int64) ([]
 	return orders, nil
 }
 
-func (o *OrderRepository) UpdateOrderStatus(ctx context.Context, userID, orderID int64, status string) error {
-	query := `UPDATE orders SET status = $1 WHERE id = $2 AND user_id = $3`
-	_, err := o.pool.Exec(ctx, query, status, orderID)
+func (o *OrderRepository) UpdateOrderStatus(ctx context.Context, userID, orderID int64, driverID int64, status string) error {
+	query := `UPDATE orders SET status = $1, driver_id = $2 WHERE id = $3 AND user_id = $4`
+	_, err := o.pool.Exec(ctx, query, status, driverID, orderID, userID)
 	if err != nil {
 		return err
 	}
