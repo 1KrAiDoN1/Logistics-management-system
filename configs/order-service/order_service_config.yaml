@@ -1,10 +1,10 @@
-address: "0.0.0.0:40003"
+address: "localhost:40003"
 database:
   driver: postgres
   host: localhost
   port: 5432
   user: postgres
-  dbname: driver_db
+  dbname: logistics_management_system
 redis_config:
   address: "0.0.0.0:6379"
   password: ""
@@ -19,4 +19,6 @@ kafka_config:
   brokers:
     - "localhost:9092"
   topic: "order-events"
+
+
 
