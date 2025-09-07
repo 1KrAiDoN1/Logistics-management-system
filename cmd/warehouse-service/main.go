@@ -6,7 +6,6 @@ import (
 	warehouseservice "logistics/internal/services/warehouse-service"
 	"logistics/internal/services/warehouse-service/grpc/app"
 	"logistics/internal/services/warehouse-service/repository"
-	"logistics/pkg/cache/redis"
 	"logistics/pkg/database/postgres"
 	"logistics/pkg/lib/logger/slogger"
 	"os"
@@ -35,16 +34,9 @@ func main() {
 	}
 	defer db.Close()
 
-	redis, err := redis.NewRedisClient(warehouseGRPCServiceConfig.RedisConfig)
-	if err != nil {
-		log.Error("Failed to connect to Redis", slogger.Err(err))
-		os.Exit(1)
-	}
-	defer redis.Close()
-
 	dbpool := db.GetPool()
 	warehouseGRPCRepository := repository.NewWarehouseRepository(dbpool)
-	warehouseGRPCService := warehouseservice.NewWarehouseGRPCService(log, warehouseGRPCRepository, redis.Client)
+	warehouseGRPCService := warehouseservice.NewWarehouseGRPCService(log, warehouseGRPCRepository)
 
 	warehouseGRPCApp := app.NewApp(log, warehouseGRPCService, warehouseGRPCServiceConfig)
 	if err := warehouseGRPCApp.Run(); err != nil {

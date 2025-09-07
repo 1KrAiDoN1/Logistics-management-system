@@ -1,2 +1,3 @@
 testing merge branches
 git ls-files | xargs wc -l
+#sudo pkill redis-server - to stop Redis server
