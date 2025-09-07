@@ -44,7 +44,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		LastName:        userReg.LastName,
 	})
 	if err != nil {
-		h.logger.Error("Failed to register user", slogger.Err(err), slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)))
+		h.logger.Error("Failed to register user", slogger.Err(err), slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

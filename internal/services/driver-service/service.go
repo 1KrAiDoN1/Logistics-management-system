@@ -15,7 +15,6 @@ import (
 
 	"github.com/segmentio/kafka-go"
 
-	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,15 +25,13 @@ type DriverGRPCService struct {
 	driverpb.UnimplementedDriverServiceServer
 	driverRepo    domain.DriverRepositoryInterface
 	logger        *slog.Logger
-	redisClient   *redis.Client
 	kafkaProducer *kfk.KafkaProducer
 }
 
-func NewDriverGRPCService(logger *slog.Logger, driverRepo domain.DriverRepositoryInterface, kafkaProducer *kfk.KafkaProducer, redisClient *redis.Client) *DriverGRPCService {
+func NewDriverGRPCService(logger *slog.Logger, driverRepo domain.DriverRepositoryInterface, kafkaProducer *kfk.KafkaProducer) *DriverGRPCService {
 	return &DriverGRPCService{
 		driverRepo:    driverRepo,
 		logger:        logger,
-		redisClient:   redisClient,
 		kafkaProducer: kafkaProducer,
 	}
 }
@@ -81,6 +78,7 @@ func (d *DriverGRPCService) FindSuitableDriver(ctx context.Context, req *driverp
 	messageBytes, err := json.Marshal(msg)
 	if err != nil {
 		d.logger.Error("Failed to marshal data", "error", err.Error())
+		return &driverpb.FindDriverResponse{}, err
 	}
 
 	err = d.kafkaProducer.SendMessage(ctx, kafka.Message{
@@ -88,6 +86,7 @@ func (d *DriverGRPCService) FindSuitableDriver(ctx context.Context, req *driverp
 	})
 	if err != nil {
 		d.logger.Error("Failed to send message - Kafka", "error", err.Error())
+		return &driverpb.FindDriverResponse{}, err
 	}
 
 	resp, err := d.UpdateDriverStatus(ctx, &driverpb.UpdateDriverStatusRequest{

@@ -18,28 +18,24 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
-	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
-	JWTokenTTL      = 24 * time.Hour
-	RefreshTokenTTL = 30 * 24 * time.Hour
+	AccessTokenTTL = 15 * time.Minute
 )
 
 type AuthGRPCService struct {
 	authpb.UnimplementedAuthServiceServer
 	log            *slog.Logger
 	authrepository domain.AuthRepositoryInterface
-	redisClient    *redis.Client
 }
 
-func NewAuthGRPCService(log *slog.Logger, repository domain.AuthRepositoryInterface, redisClient *redis.Client) *AuthGRPCService {
+func NewAuthGRPCService(log *slog.Logger, repository domain.AuthRepositoryInterface) *AuthGRPCService {
 	return &AuthGRPCService{
 		log:            log,
 		authrepository: repository,
-		redisClient:    redisClient,
 	}
 }
 
@@ -178,7 +174,7 @@ func (s *AuthGRPCService) GenerateAccessToken(ctx context.Context, req *authpb.G
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Subject:   strconv.Itoa(int(req.UserId)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(JWTokenTTL)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL)),
 	})
 	err := godotenv.Load(".env")
 	if err != nil {

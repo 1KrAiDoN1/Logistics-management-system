@@ -9,7 +9,6 @@ import (
 	"logistics/pkg/lib/logger/slogger"
 	"logistics/pkg/lib/utils"
 
-	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -18,14 +17,12 @@ type WarehouseGRPCService struct {
 	warehousepb.UnimplementedWarehouseServiceServer
 	warehouseRepo domain.WarehouseRepositoryInterface
 	logger        *slog.Logger
-	redisClient   *redis.Client
 }
 
-func NewWarehouseGRPCService(logger *slog.Logger, warehouseRepo domain.WarehouseRepositoryInterface, redisClient *redis.Client) *WarehouseGRPCService {
+func NewWarehouseGRPCService(logger *slog.Logger, warehouseRepo domain.WarehouseRepositoryInterface) *WarehouseGRPCService {
 	return &WarehouseGRPCService{
 		warehouseRepo: warehouseRepo,
 		logger:        logger,
-		redisClient:   redisClient,
 	}
 }
 

@@ -69,8 +69,8 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 
 	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient)
 	return &Server{
-		router: router,
-		// authGRPCClient:       authGRPCClient,
+		router:               router,
+		authGRPCClient:       authGRPCClient,
 		handlers:             handlers,
 		microservices_config: microservices_config,
 		logger:               logger,

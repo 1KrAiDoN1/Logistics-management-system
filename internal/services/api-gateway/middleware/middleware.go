@@ -15,6 +15,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	RefreshTokenTTL = 24 * time.Hour
+)
+
 func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
@@ -94,6 +98,7 @@ func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 						c.Abort()
 						return
 					}
+
 					_, err = authGRPCService.SaveNewRefreshToken(ctx, &authpb.SaveNewRefreshTokenRequest{
 						UserId:       userID.UserId,
 						RefreshToken: new_refresh_token.RefreshToken,
@@ -105,6 +110,7 @@ func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 						return
 					}
 					c.Header("Authorization", "Bearer "+new_access_token.AccessToken)
+					SetRefreshTokenCookie(c, new_refresh_token.RefreshToken)
 					c.Set("user_id", uint(userID.UserId))
 					c.Next()
 					return
@@ -143,4 +149,8 @@ func GetUserId(c *gin.Context) (uint, error) {
 	default:
 		return 0, fmt.Errorf("invalid user_id type: %T", userID)
 	}
+}
+
+func SetRefreshTokenCookie(c *gin.Context, refreshToken string) {
+	c.SetCookie("refresh_token", refreshToken, int(RefreshTokenTTL.Seconds()), "/", "", true, true)
 }
