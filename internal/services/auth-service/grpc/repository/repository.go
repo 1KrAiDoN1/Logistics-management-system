@@ -18,9 +18,9 @@ func NewAuthRepository(pool *pgxpool.Pool) *AuthRepository {
 }
 
 func (a *AuthRepository) CreateUser(ctx context.Context, user *entity.User) (int64, error) {
-	query := `INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id`
+	query := `INSERT INTO users (first_name, last_name, email, password, time_of_registration) VALUES ($1, $2, $3, $4, $5) RETURNING id`
 	var userID int64
-	err := a.pool.QueryRow(ctx, query, user.Email, user.Password).Scan(&userID)
+	err := a.pool.QueryRow(ctx, query, user.FirstName, user.LastName, user.Email, user.Password, user.TimeOfRegistration).Scan(&userID)
 	if err != nil {
 		return 0, err
 	}

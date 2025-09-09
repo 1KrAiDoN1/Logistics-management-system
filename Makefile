@@ -1,3 +1,9 @@
+include .env
+export $(shell sed 's/=.*//' .env)
+
+DB_URL = postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}?sslmode=disable
+
+
 proto-auth:
 	protoc -I api/protobuf/ \
 		api/protobuf/auth_service/auth_service.proto \
@@ -44,3 +50,11 @@ create-kafka-topics:
   --topic drivers \
   --partitions 3 \
   --replication-factor 1
+
+migrate-all-up:
+	migrate -path ./migrations -database "${DB_URL}" up
+
+migrate-all-down:
+	migrate -path ./migrations -database "${DB_URL}" down
+
+

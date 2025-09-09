@@ -24,14 +24,15 @@ const (
 
 // Запрос на регистрацию
 type SignUpRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	Email           string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Password        string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
-	ConfirmPassword string                 `protobuf:"bytes,3,opt,name=confirm_password,json=confirmPassword,proto3" json:"confirm_password,omitempty"`
-	FirstName       string                 `protobuf:"bytes,4,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
-	LastName        string                 `protobuf:"bytes,5,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Email              string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Password           string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	ConfirmPassword    string                 `protobuf:"bytes,3,opt,name=confirm_password,json=confirmPassword,proto3" json:"confirm_password,omitempty"`
+	FirstName          string                 `protobuf:"bytes,4,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
+	LastName           string                 `protobuf:"bytes,5,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
+	TimeOfRegistration int64                  `protobuf:"varint,6,opt,name=time_of_registration,json=timeOfRegistration,proto3" json:"time_of_registration,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *SignUpRequest) Reset() {
@@ -97,6 +98,13 @@ func (x *SignUpRequest) GetLastName() string {
 		return x.LastName
 	}
 	return ""
+}
+
+func (x *SignUpRequest) GetTimeOfRegistration() int64 {
+	if x != nil {
+		return x.TimeOfRegistration
+	}
+	return 0
 }
 
 // Ответ на регистрацию
@@ -910,14 +918,15 @@ var File_auth_service_auth_service_proto protoreflect.FileDescriptor
 
 const file_auth_service_auth_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1fauth_service/auth_service.proto\x12\x04auth\x1a\x1bgoogle/protobuf/empty.proto\"\xa8\x01\n" +
+	"\x1fauth_service/auth_service.proto\x12\x04auth\x1a\x1bgoogle/protobuf/empty.proto\"\xda\x01\n" +
 	"\rSignUpRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12)\n" +
 	"\x10confirm_password\x18\x03 \x01(\tR\x0fconfirmPassword\x12\x1d\n" +
 	"\n" +
 	"first_name\x18\x04 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x05 \x01(\tR\blastName\"{\n" +
+	"\tlast_name\x18\x05 \x01(\tR\blastName\x120\n" +
+	"\x14time_of_registration\x18\x06 \x01(\x03R\x12timeOfRegistration\"{\n" +
 	"\x0eSignUpResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1d\n" +

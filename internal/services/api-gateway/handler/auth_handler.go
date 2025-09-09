@@ -37,11 +37,12 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	}
 
 	user, err := h.authGRPCClient.SignUp(ctx, &authpb.SignUpRequest{
-		Email:           userReg.Email,
-		Password:        userReg.Password,
-		ConfirmPassword: userReg.ConfirmPassword,
-		FirstName:       userReg.FirstName,
-		LastName:        userReg.LastName,
+		Email:              userReg.Email,
+		Password:           userReg.Password,
+		ConfirmPassword:    userReg.ConfirmPassword,
+		FirstName:          userReg.FirstName,
+		LastName:           userReg.LastName,
+		TimeOfRegistration: time.Now().Unix(),
 	})
 	if err != nil {
 		h.logger.Error("Failed to register user", slogger.Err(err), slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))

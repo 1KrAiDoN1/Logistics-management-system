@@ -46,6 +46,7 @@ message SignUpRequest {
   string confirm_password = 3;
   string first_name = 4;
   string last_name = 5;
+  int64 time_of_registration = 6;
 }
 
 // Ответ на регистрацию

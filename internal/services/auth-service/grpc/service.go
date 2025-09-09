@@ -62,7 +62,7 @@ func (s *AuthGRPCService) SignUp(ctx context.Context, req *authpb.SignUpRequest)
 		Password:           hashedPassword,
 		FirstName:          req.FirstName,
 		LastName:           req.LastName,
-		TimeOfRegistration: time.Now().Unix(),
+		TimeOfRegistration: req.TimeOfRegistration,
 	}
 
 	userID, err := s.authrepository.CreateUser(ctx, user)

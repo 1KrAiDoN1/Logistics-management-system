@@ -13,7 +13,6 @@ type RegisterRequest struct {
 	ConfirmPassword string `json:"confirm_password" validate:"required,eqfield=Password"`
 	FirstName       string `json:"first_name" validate:"required,min=2,max=50" example:"John"`
 	LastName        string `json:"last_name" validate:"required,min=2,max=50" example:"Doe"`
-	// TimeOfRegistration time.Time `json:"time_of_registration" example:"2024-01-15T10:30:00Z"`
 }
 
 // LoginRequest - данные для входа
