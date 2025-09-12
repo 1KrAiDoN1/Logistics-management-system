@@ -53,3 +53,10 @@ CREATE TABLE warehouse_stock (
 );
 CREATE INDEX idx_warehouse_stock_name_quantity ON warehouse_stock(product_name, quantity);
 CREATE INDEX idx_warehouse_stock_quantity_price ON warehouse_stock(quantity, price);
+
+CREATE TABLE refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL
+);
