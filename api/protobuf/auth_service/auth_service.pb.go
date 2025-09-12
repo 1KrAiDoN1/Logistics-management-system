@@ -237,6 +237,7 @@ type SignInResponse struct {
 	FirstName     string                 `protobuf:"bytes,3,opt,name=first_name,json=firstName,proto3" json:"first_name,omitempty"`
 	LastName      string                 `protobuf:"bytes,4,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
 	AccessToken   string                 `protobuf:"bytes,5,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,6,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -302,6 +303,13 @@ func (x *SignInResponse) GetLastName() string {
 func (x *SignInResponse) GetAccessToken() string {
 	if x != nil {
 		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *SignInResponse) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
 	}
 	return ""
 }
@@ -814,6 +822,7 @@ type SaveNewRefreshTokenRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	ExpiresAt     int64                  `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -860,6 +869,13 @@ func (x *SaveNewRefreshTokenRequest) GetRefreshToken() string {
 		return x.RefreshToken
 	}
 	return ""
+}
+
+func (x *SaveNewRefreshTokenRequest) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
 }
 
 type RemoveOldRefreshTokenRequest struct {
@@ -935,14 +951,15 @@ const file_auth_service_auth_service_proto_rawDesc = "" +
 	"\tlast_name\x18\x04 \x01(\tR\blastName\"A\n" +
 	"\rSignInRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x9e\x01\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\xc3\x01\n" +
 	"\x0eSignInResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1d\n" +
 	"\n" +
 	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
 	"\tlast_name\x18\x04 \x01(\tR\blastName\x12!\n" +
-	"\faccess_token\x18\x05 \x01(\tR\vaccessToken\"(\n" +
+	"\faccess_token\x18\x05 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x06 \x01(\tR\frefreshToken\"(\n" +
 	"\rLogoutRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\")\n" +
 	"\x0eIsAdminRequest\x12\x17\n" +
@@ -965,10 +982,12 @@ const file_auth_service_auth_service_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"\\\n" +
 	"\x1cGenerateRefreshTokenResponse\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"Z\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"y\n" +
 	"\x1aSaveNewRefreshTokenRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"\\\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
+	"\n" +
+	"expires_at\x18\x03 \x01(\x03R\texpiresAt\"\\\n" +
 	"\x1cRemoveOldRefreshTokenRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken2\xf9\x05\n" +

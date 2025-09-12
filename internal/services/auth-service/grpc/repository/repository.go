@@ -50,9 +50,9 @@ func (a *AuthRepository) CheckUserVerification(ctx context.Context, email string
 
 }
 
-func (a *AuthRepository) SaveNewRefreshToken(ctx context.Context, userID int64, refreshToken string) error {
-	query := `INSERT INTO refresh_tokens (user_id, token) VALUES ($1, $2)`
-	_, err := a.pool.Exec(ctx, query, userID, refreshToken)
+func (a *AuthRepository) SaveNewRefreshToken(ctx context.Context, userID int64, refreshToken string, expires_at int64) error {
+	query := `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)`
+	_, err := a.pool.Exec(ctx, query, userID, refreshToken, expires_at)
 	if err != nil {
 		return err
 	}

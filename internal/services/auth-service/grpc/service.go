@@ -70,7 +70,6 @@ func (s *AuthGRPCService) SignUp(ctx context.Context, req *authpb.SignUpRequest)
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	// Реализация логики регистрации пользователя
 	return &authpb.SignUpResponse{
 		UserId:    userID,
 		Email:     req.Email,
@@ -95,15 +94,19 @@ func (s *AuthGRPCService) SignIn(ctx context.Context, req *authpb.SignInRequest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
-	// refreshToken, err := s.GenerateRefreshToken(ctx, &authpb.GenerateRefreshTokenRequest{
-	// 	UserId: int64(user.ID),
-	// })
+	refreshToken, err := s.GenerateRefreshToken(ctx, &authpb.GenerateRefreshTokenRequest{
+		UserId: int64(user.ID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+	}
 	return &authpb.SignInResponse{
-		UserId:      int64(user.ID),
-		Email:       user.Email,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		AccessToken: accessToken.AccessToken,
+		UserId:       int64(user.ID),
+		Email:        user.Email,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		AccessToken:  accessToken.AccessToken,
+		RefreshToken: refreshToken.RefreshToken,
 	}, nil
 
 	//ДОБАВИТЬ КЭШИРОВАНИЕ
@@ -225,7 +228,7 @@ func (s *AuthGRPCService) RemoveOldRefreshToken(ctx context.Context, req *authpb
 }
 
 func (s *AuthGRPCService) SaveNewRefreshToken(ctx context.Context, req *authpb.SaveNewRefreshTokenRequest) (*emptypb.Empty, error) {
-	err := s.authrepository.SaveNewRefreshToken(ctx, req.UserId, req.RefreshToken)
+	err := s.authrepository.SaveNewRefreshToken(ctx, req.UserId, req.RefreshToken, req.ExpiresAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save new refresh token: %w", err)
 	}

@@ -72,7 +72,7 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	// middleware.SetRefreshTokenCookie(c, token.RefreshToken)
+	middleware.SetRefreshTokenCookie(c, token.RefreshToken)
 
 	c.Header("Authorization", "Bearer "+token.AccessToken)
 
@@ -88,7 +88,7 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 	})
 }
 func (h *AuthHandler) Logout(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
