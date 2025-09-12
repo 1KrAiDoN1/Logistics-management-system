@@ -11,6 +11,7 @@ import (
 	"logistics/internal/shared/entity"
 	"logistics/internal/shared/models/dto"
 	"logistics/pkg/lib/logger/slogger"
+	"logistics/pkg/lib/utils"
 	"net/http"
 	"strconv"
 	"sync"
@@ -56,18 +57,16 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// Используем errgroup для параллельных операций
 	g, gctx := errgroup.WithContext(ctx)
 
-	// Результаты параллельных операций
 	var (
 		stockResult *warehousepb.CheckStockResponse
-		mu          sync.RWMutex // защищаем результаты
+		mu          sync.RWMutex
 	)
 
 	// Проверка наличия товаров на складе
 	g.Go(func() error {
-		o.stockCheckWorkers <- struct{}{} // семафор для ограничения горутин
+		o.stockCheckWorkers <- struct{}{}
 		defer func() { <-o.stockCheckWorkers }()
 
 		stockReq := &warehousepb.CheckStockRequest{
@@ -103,7 +102,7 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 
 	// Проверяем результаты (с защитой мьютексом)
 	mu.RLock()
-	if !stockResult.Available {
+	if stockResult.Available {
 		mu.RUnlock()
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Stock not available",
@@ -136,9 +135,10 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 			ID:              orderResp.Order.Id,
 			UserID:          orderReq.UserId,
 			Status:          entity.OrderStatus(orderResp.Order.Status),
+			Items:           utils.ConvertOrderItemToGoodsItem(orderResp.Order.Items),
 			TotalAmount:     orderResp.Order.TotalAmount,
 			DeliveryAddress: orderReq.DeliveryAddress,
-			CreatedAt:       orderResp.Order.CreatedAt.AsTime(),
+			CreatedAt:       orderResp.Order.CreatedAt.AsTime().Unix(),
 		},
 		Message: "Order created successfully",
 	})
@@ -159,7 +159,7 @@ func convertToOrderItems(createItems []dto.CreateOrderItem) []*orderpb.OrderItem
 }
 
 func (o *OrderHandler) GetOrders(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -184,7 +184,7 @@ func (o *OrderHandler) GetOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, orders)
 }
 func (o *OrderHandler) GetOrderByID(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -219,7 +219,7 @@ func (o *OrderHandler) GetOrderByID(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 func (o *OrderHandler) AssignDriver(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -255,7 +255,7 @@ func (o *OrderHandler) AssignDriver(c *gin.Context) {
 }
 
 func (o *OrderHandler) GetDeliveries(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -281,7 +281,7 @@ func (o *OrderHandler) GetDeliveries(c *gin.Context) {
 }
 
 func (o *OrderHandler) CompleteOrder(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {

@@ -1,7 +1,5 @@
 package entity
 
-import "time"
-
 // Order - основная структура заказа
 type Order struct {
 	ID              int64       `json:"id" db:"id"`
@@ -11,7 +9,7 @@ type Order struct {
 	Items           []GoodsItem `json:"items"`
 	TotalAmount     float64     `json:"total_amount" db:"total_amount"`
 	DriverID        *int64      `json:"driver_id" db:"driver_id"`
-	CreatedAt       time.Time   `json:"created_at" db:"created_at"`
+	CreatedAt       int64       `json:"created_at" db:"created_at"`
 }
 
 type OrderStatus string

@@ -46,7 +46,7 @@ func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		Status:          entity.StatusPending,
 		Items:           utils.ConvertOrderItemToGoodsItem(req.Items),
 		DeliveryAddress: req.DeliveryAddress,
-		CreatedAt:       time.Now(),
+		CreatedAt:       time.Now().Unix(),
 	}
 	order.TotalAmount = 0
 	for _, item := range order.Items {
@@ -76,7 +76,7 @@ func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateO
 			UserId:      order.UserID,
 			Items:       req.Items,
 			TotalAmount: order.TotalAmount,
-			CreatedAt:   timestamppb.New(order.CreatedAt),
+			CreatedAt:   timestamppb.New(time.Unix(order.CreatedAt, 0)),
 			Status:      string(order.Status),
 		},
 	}, nil
@@ -100,25 +100,26 @@ func (o *OrderGRPCService) AssignDriver(ctx context.Context, req *orderpb.Assign
 
 	case kafkamessage := <-out:
 
-		var message entity.Msg
+		var message entity.DriverKafka
 		err := json.Unmarshal(kafkamessage.Value, &message)
 		if err != nil {
-			o.logger.Error("❌ Failed to unmarshal message", slog.String("error", err.Error()))
+			o.logger.Error("Failed to unmarshal message", slog.String("error", err.Error()))
 			return &orderpb.AssignDriverResponse{}, err
 		}
+		slog.Info("Received Kafka message", slog.String("key", string(kafkamessage.Key)), slog.String("value", string(kafkamessage.Value)))
 
 		stats, err := o.UpdateOrderStatus(ctx, &orderpb.UpdateOrderStatusRequest{
 			UserId:   req.UserId,
 			OrderId:  req.OrderId,
-			DriverId: message.Driver.ID,
+			DriverId: message.ID,
 			Status:   string(entity.StatusInProgress),
 		})
 		if err != nil {
-			o.logger.Error("❌ Failed to update order status", slog.String("status", "error"), slog.String("error", err.Error()))
+			o.logger.Error("Failed to update order status", slog.String("status", "error"), slog.String("error", err.Error()))
 			return &orderpb.AssignDriverResponse{}, err
 		}
 		if !stats.Success {
-			o.logger.Error("❌ Not success, failed to update order status")
+			o.logger.Error("Not success, failed to update order status")
 			return &orderpb.AssignDriverResponse{}, err
 		}
 
@@ -127,18 +128,18 @@ func (o *OrderGRPCService) AssignDriver(ctx context.Context, req *orderpb.Assign
 			return &orderpb.AssignDriverResponse{}, err
 		}
 		return &orderpb.AssignDriverResponse{
-			DriverId: message.Driver.ID,
-			OrderId:  message.OrderId,
+			DriverId: message.ID,
+			OrderId:  req.OrderId,
 			Success:  true,
 			Message:  stats.Message,
 		}, nil
 
 	case err := <-errCh:
-		o.logger.Error("❌ Failed to consume message", slog.String("error", err.Error()))
+		o.logger.Error("Failed to consume message", slog.String("error", err.Error()))
 		return nil, err
 
 	case <-ctx.Done():
-		o.logger.Error("❌ Context cancelled", slog.String("error", ctx.Err().Error()))
+		o.logger.Error("Context cancelled", slog.String("error", ctx.Err().Error()))
 		return nil, ctx.Err()
 	}
 
@@ -186,7 +187,7 @@ func (o *OrderGRPCService) GetDeliveries(ctx context.Context, req *orderpb.GetDe
 			Items:           items,
 			TotalAmount:     order.TotalAmount,
 			DriverId:        driverID,
-			CreatedAt:       timestamppb.New(order.CreatedAt),
+			CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
 		})
 	}
 	return &orderpb.GetDeliveriesByUserResponse{
@@ -226,7 +227,7 @@ func (o *OrderGRPCService) GetOrderDetails(ctx context.Context, req *orderpb.Get
 					Items:           items,
 					TotalAmount:     order.TotalAmount,
 					DriverId:        driverID,
-					CreatedAt:       timestamppb.New(order.CreatedAt),
+					CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
 				},
 			}, nil
 		}
@@ -262,7 +263,7 @@ func (o *OrderGRPCService) GetOrderDetails(ctx context.Context, req *orderpb.Get
 			Items:           items,
 			TotalAmount:     order.TotalAmount,
 			DriverId:        driverID,
-			CreatedAt:       timestamppb.New(order.CreatedAt),
+			CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
 		},
 	}, nil
 }
@@ -296,7 +297,7 @@ func (o *OrderGRPCService) GetOrdersByUser(ctx context.Context, req *orderpb.Get
 			Items:           items,
 			TotalAmount:     order.TotalAmount,
 			DriverId:        driverID,
-			CreatedAt:       timestamppb.New(order.CreatedAt),
+			CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
 		})
 	}
 	return &orderpb.GetOrdersByUserResponse{

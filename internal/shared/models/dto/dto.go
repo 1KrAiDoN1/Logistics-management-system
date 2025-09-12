@@ -33,11 +33,6 @@ type AccessTokenRequest struct {
 	ExpiresAt   time.Time `json:"expires_at"`
 }
 
-type LogoutRequest struct {
-	AccessToken  string `json:"access_token" validate:"required"`
-	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
 // Ответы аутентификации
 
 // AuthResponse - ответ после успешной аутентификации
