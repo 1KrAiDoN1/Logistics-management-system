@@ -16,12 +16,14 @@ type KafkaConsumer struct {
 func NewKafkaConsumer(log *slog.Logger, cfg KafkaConfig) *KafkaConsumer {
 	return &KafkaConsumer{
 		reader: kafka.NewReader(kafka.ReaderConfig{
-			Brokers:        cfg.Brokers,
-			Topic:          cfg.Topic,
-			MinBytes:       10e3, // 10KB
-			MaxBytes:       10e6, // 10MB
-			CommitInterval: time.Second,
-			StartOffset:    kafka.LastOffset,
+			Brokers:          cfg.Brokers,
+			Topic:            cfg.Topic,
+			GroupID:          "order-service-group",
+			MinBytes:         1,
+			MaxBytes:         10e6, // 10MB
+			CommitInterval:   time.Second,
+			StartOffset:      kafka.LastOffset,
+			ReadBatchTimeout: 100 * time.Millisecond,
 		}),
 		logger: log,
 	}

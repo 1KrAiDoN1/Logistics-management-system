@@ -22,9 +22,10 @@ type DriverFoundMessage struct {
 type KafkaProducer struct {
 	writer *kafka.Writer
 	config KafkaConfig
+	logger *slog.Logger
 }
 
-func NewKafkaProducer(cfg KafkaConfig) *KafkaProducer {
+func NewKafkaProducer(cfg KafkaConfig, log *slog.Logger) *KafkaProducer {
 	return &KafkaProducer{
 		writer: &kafka.Writer{
 			Addr:         kafka.TCP(cfg.Brokers...),
@@ -36,20 +37,21 @@ func NewKafkaProducer(cfg KafkaConfig) *KafkaProducer {
 			WriteTimeout: 5 * time.Second,
 		},
 		config: cfg,
+		logger: log,
 	}
 }
 
 func (kp *KafkaProducer) SendMessage(ctx context.Context, msg kafka.Message) error {
-	slog.Info("Attempting to send message to Kafka",
+	kp.logger.Info("Attempting to send message to Kafka",
 		slog.String("topic", kp.writer.Topic),
 		slog.String("key", string(msg.Key)),
 		slog.Int("value_size", len(msg.Value)))
 	err := kp.writer.WriteMessages(ctx, msg)
 	if err != nil {
-		slog.Error("Failed to send message to Kafka", slog.String("error", err.Error()))
+		kp.logger.Error("Failed to send message to Kafka", slog.String("error", err.Error()))
 		return fmt.Errorf("failed to send message: %w", err)
 	}
-	slog.Info("Message sent to Kafka", slog.String("topic", kp.writer.Topic), slog.String("key", string(msg.Value)))
+	kp.logger.Info("Message sent to Kafka", slog.String("topic", kp.writer.Topic), slog.String("key", string(msg.Value)))
 
 	return nil
 }

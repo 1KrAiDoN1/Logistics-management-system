@@ -219,7 +219,7 @@ func (o *OrderHandler) GetOrderByID(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 func (o *OrderHandler) AssignDriver(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -234,6 +234,17 @@ func (o *OrderHandler) AssignDriver(c *gin.Context) {
 		o.logger.Error("Invalid order_id", slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)), slogger.Err(err))
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid order_id",
+		})
+		return
+	}
+	_, err = o.driverGRPCClient.FindSuitableDriver(ctx, &driverpb.FindDriverRequest{
+		OrderId: int64(orderID),
+	})
+	if err != nil {
+		o.logger.Error("Failed to find suitable driver", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to find suitable driver",
+			"message": err.Error(),
 		})
 		return
 	}

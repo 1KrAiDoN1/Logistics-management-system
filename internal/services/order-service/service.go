@@ -106,7 +106,7 @@ func (o *OrderGRPCService) AssignDriver(ctx context.Context, req *orderpb.Assign
 			o.logger.Error("Failed to unmarshal message", slog.String("error", err.Error()))
 			return &orderpb.AssignDriverResponse{}, err
 		}
-		slog.Info("Received Kafka message", slog.String("key", string(kafkamessage.Key)), slog.String("value", string(kafkamessage.Value)))
+		o.logger.Info("Received Kafka message", slog.String("key", string(kafkamessage.Key)), slog.String("value", string(kafkamessage.Value)))
 
 		stats, err := o.UpdateOrderStatus(ctx, &orderpb.UpdateOrderStatusRequest{
 			UserId:   req.UserId,
