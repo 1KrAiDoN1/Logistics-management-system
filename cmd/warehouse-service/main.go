@@ -27,7 +27,7 @@ func main() {
 	}
 	_ = dbConnstr
 
-	db, err := postgres.NewDatabase(ctx, "")
+	db, err := postgres.NewDatabase(ctx, dbConnstr)
 	if err != nil {
 		log.Error("Failed to connect to the database", slogger.Err(err))
 		os.Exit(1)

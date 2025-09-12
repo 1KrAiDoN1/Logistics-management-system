@@ -73,7 +73,7 @@ func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 					_, err = authGRPCService.RemoveOldRefreshToken(ctx, &authpb.RemoveOldRefreshTokenRequest{
 						UserId:       userID.UserId,
 						RefreshToken: refresh_token,
-					}) // удалить старый refresh token
+					})
 					if err != nil {
 						slog.Error("Failed to remove old refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
 						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove old refresh token"})
@@ -102,6 +102,7 @@ func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 					_, err = authGRPCService.SaveNewRefreshToken(ctx, &authpb.SaveNewRefreshTokenRequest{
 						UserId:       userID.UserId,
 						RefreshToken: new_refresh_token.RefreshToken,
+						ExpiresAt:    time.Now().Add(RefreshTokenTTL).Unix(),
 					})
 					if err != nil {
 						slog.Error("Failed to save new refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))

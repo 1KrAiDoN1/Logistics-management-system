@@ -80,6 +80,7 @@ func (d *DriverGRPCService) FindSuitableDriver(ctx context.Context, req *driverp
 		d.logger.Error("Failed to marshal data", "error", err.Error())
 		return &driverpb.FindDriverResponse{}, err
 	}
+	slog.Info("Sending Kafka message", slog.String("message", string(messageBytes)))
 
 	err = d.kafkaProducer.SendMessage(ctx, kafka.Message{
 		Value: messageBytes,

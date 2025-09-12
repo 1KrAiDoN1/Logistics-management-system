@@ -37,7 +37,12 @@ func main() {
 	dbpool := db.GetPool()
 
 	kafkaProducer := kafka.NewKafkaProducer(driverGRPCServiceConfig.KafkaConfig)
+	if !kafkaProducer.IsHealthy() {
+		log.Error("Kafka is not available. Cannot start service.")
+		os.Exit(1)
+	}
 	defer kafkaProducer.Close()
+	log.Info("Kafka producer initialized", "brokers", driverGRPCServiceConfig.KafkaConfig.Brokers, "topic", driverGRPCServiceConfig.KafkaConfig.Topic)
 
 	driverGRPCRepository := repository.NewDriverRepository(dbpool)
 	driverGRPCService := driverservice.NewDriverGRPCService(log, driverGRPCRepository, kafkaProducer)

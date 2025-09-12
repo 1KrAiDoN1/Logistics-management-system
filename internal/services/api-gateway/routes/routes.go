@@ -26,15 +26,6 @@ func SetupOrderRoutes(router *gin.RouterGroup, orderHandler handler.OrderHandler
 	}
 }
 
-func SetupAdminRoutes(router *gin.RouterGroup, adminHandler handler.AdminHandlerInterface) {
-	admin := router.Group("/admin")
-	{
-		admin.GET("/metrics", adminHandler.GetMetrics)
-		admin.GET("/logs", adminHandler.GetLogs)
-		admin.GET("/system/info", adminHandler.GetSystemInfo)
-	}
-}
-
 func SetupWarehouseRoutes(router *gin.RouterGroup, warehouseHandler handler.WarehouseHandlerInterface) {
 	warehouse := router.Group("/store")
 	{
