@@ -19,6 +19,7 @@ kafka_config:
   brokers:
     - "localhost:9092"
   topic: "order-events"
+  group_id: "order-service-group"
 
 
 

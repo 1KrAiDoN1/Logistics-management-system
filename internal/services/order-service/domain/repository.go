@@ -13,4 +13,6 @@ type OrderRepositoryInterface interface {
 	GetOrderDetails(ctx context.Context, userPD int64, orderID int64) (*entity.Order, error)
 	GetOrdersByUser(ctx context.Context, userID int64) ([]*entity.Order, error)
 	UpdateOrderStatus(ctx context.Context, userID, orderID int64, driverID int64, status string) error
+	CheckDeliveryStatus(ctx context.Context, userID, orderID int64) (string, error)
+	GetOrderItemPrice(ctx context.Context, productName string) (float64, error)
 }

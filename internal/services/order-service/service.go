@@ -40,6 +40,17 @@ func RegisterOrderServiceServer(s *grpc.Server, srv *OrderGRPCService) {
 	orderpb.RegisterOrderServiceServer(s, srv)
 }
 
+func (o *OrderGRPCService) GetOrderItemPrice(ctx context.Context, req *orderpb.GetOrderItemPriceRequest) (*orderpb.GetOrderItemPriceResponse, error) {
+	price, err := o.orderRepo.GetOrderItemPrice(ctx, req.ProductName)
+	if err != nil {
+		o.logger.Error("failed to get item price", slog.String("status", "error"), slogger.Err(err))
+		return nil, err
+	}
+	return &orderpb.GetOrderItemPriceResponse{
+		Price: price,
+	}, nil
+}
+
 func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateOrderRequest) (*orderpb.CreateOrderResponse, error) {
 	order := &entity.Order{
 		UserID:          req.UserId,
@@ -50,6 +61,14 @@ func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateO
 	}
 	order.TotalAmount = 0
 	for _, item := range order.Items {
+
+		price, err := o.orderRepo.GetOrderItemPrice(ctx, item.ProductName)
+		if err != nil {
+			o.logger.Error("failed to get item price", slog.String("status", "error"), slogger.Err(err))
+			return nil, err
+		}
+		item.Price = price
+		item.TotalPrice = price * float64(item.Quantity)
 		order.TotalAmount += item.Price * float64(item.Quantity)
 	}
 
@@ -74,7 +93,7 @@ func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		Order: &orderpb.Order{
 			Id:          orderID,
 			UserId:      order.UserID,
-			Items:       req.Items,
+			Items:       utils.ConvertGoodsItemSliceToOrderItemSlice(order.Items),
 			TotalAmount: order.TotalAmount,
 			CreatedAt:   timestamppb.New(time.Unix(order.CreatedAt, 0)),
 			Status:      string(order.Status),
@@ -146,7 +165,18 @@ func (o *OrderGRPCService) AssignDriver(ctx context.Context, req *orderpb.Assign
 }
 
 func (o *OrderGRPCService) CompleteDelivery(ctx context.Context, req *orderpb.CompleteDeliveryRequest) (*orderpb.CompleteDeliveryResponse, error) {
-	err := o.orderRepo.CompleteDelivery(ctx, req.UserId, req.OrderId)
+	status, err := o.orderRepo.CheckDeliveryStatus(ctx, req.UserId, req.OrderId)
+	if err != nil {
+		o.logger.Error("failed to check delivery status", slog.String("status", "error"), slogger.Err(err))
+		return nil, err
+	}
+	if status != string(entity.StatusInProgress) {
+		return &orderpb.CompleteDeliveryResponse{
+			Success: false,
+			Message: fmt.Sprintf("Cannot complete delivery. Current order status is: %s", status),
+		}, nil
+	}
+	err = o.orderRepo.CompleteDelivery(ctx, req.UserId, req.OrderId)
 	if err != nil {
 		o.logger.Error("failed to complete delivery", slog.String("status", "error"), slogger.Err(err))
 		return nil, err
@@ -212,6 +242,7 @@ func (o *OrderGRPCService) GetOrderDetails(ctx context.Context, req *orderpb.Get
 					ProductName: item.ProductName,
 					Price:       item.Price,
 					Quantity:    item.Quantity,
+					TotalPrice:  item.TotalPrice,
 				})
 			}
 			var driverID int64
@@ -248,6 +279,7 @@ func (o *OrderGRPCService) GetOrderDetails(ctx context.Context, req *orderpb.Get
 			ProductName: item.ProductName,
 			Price:       item.Price,
 			Quantity:    item.Quantity,
+			TotalPrice:  item.TotalPrice,
 		})
 	}
 	var driverID int64
@@ -283,6 +315,7 @@ func (o *OrderGRPCService) GetOrdersByUser(ctx context.Context, req *orderpb.Get
 				ProductName: item.ProductName,
 				Price:       item.Price,
 				Quantity:    item.Quantity,
+				TotalPrice:  item.TotalPrice,
 			})
 		}
 		var driverID int64
