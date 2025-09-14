@@ -42,94 +42,94 @@ func AuthMiddleware(authGRPCService authpb.AuthServiceClient) gin.HandlerFunc {
 					AccessToken: req.AccessToken,
 				})
 				if err != nil {
-					slog.Error("Invalid token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
-					c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-					c.Abort()
-					return
+					refresh_token, err := c.Cookie("refresh_token")
+					if err != nil {
+						slog.Error("Refresh token is required", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
+						c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token is required"})
+						c.Abort()
+						return
+					}
+					if refresh_token != "" {
+						userID, err := authGRPCService.GetUserIDbyRefreshToken(ctx, &authpb.GetUserIDbyRefreshTokenRequest{
+							RefreshToken: refresh_token,
+						})
+						if err != nil {
+							slog.Error("Invalid refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
+							c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+							c.Abort()
+							return
+						}
+						if userID.UserId != 0 {
+							_, err = authGRPCService.RemoveOldRefreshToken(ctx, &authpb.RemoveOldRefreshTokenRequest{
+								UserId:       userID.UserId,
+								RefreshToken: refresh_token,
+							})
+							if err != nil {
+								slog.Error("Failed to remove old refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
+								c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove old refresh token"})
+								c.Abort()
+								return
+							}
+							new_access_token, err := authGRPCService.GenerateAccessToken(ctx, &authpb.GenerateAccessTokenRequest{
+								UserId: userID.UserId,
+							})
+							if err != nil {
+								slog.Error("Failed to generate new access token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
+								c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
+								c.Abort()
+								return
+							}
+							new_refresh_token, err := authGRPCService.GenerateRefreshToken(ctx, &authpb.GenerateRefreshTokenRequest{
+								UserId: userID.UserId,
+							})
+							if err != nil {
+								slog.Error("Failed to generate new refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
+								c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new refresh token"})
+								c.Abort()
+								return
+							}
+
+							_, err = authGRPCService.SaveNewRefreshToken(ctx, &authpb.SaveNewRefreshTokenRequest{
+								UserId:       userID.UserId,
+								RefreshToken: new_refresh_token.RefreshToken,
+								ExpiresAt:    time.Now().Add(RefreshTokenTTL).Unix(),
+							})
+							if err != nil {
+								slog.Error("Failed to save new refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
+								c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save new refresh token"})
+								c.Abort()
+								return
+							}
+							c.Header("Authorization", "Bearer "+new_access_token.AccessToken)
+							SetRefreshTokenCookie(c, new_refresh_token.RefreshToken)
+							c.Set("user_id", uint(userID.UserId))
+							c.Next()
+							return
+
+						} else {
+							slog.Error("Authorization is required", slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
+							c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization is required"})
+							c.Abort()
+							return
+						}
+
+					} else {
+						slog.Error("Authorization is required", slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
+						c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization is required"})
+						c.Abort()
+						return
+
+					}
 				}
 				c.Set("user_id", uint(userID.UserId))
 				c.Next()
 				return
 			}
 		} else {
-			refresh_token, err := c.Cookie("refresh_token")
-			if err != nil {
-				slog.Error("Refresh token is required", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token is required"})
-				c.Abort()
-				return
-			}
-			if refresh_token != "" {
-				userID, err := authGRPCService.GetUserIDbyRefreshToken(ctx, &authpb.GetUserIDbyRefreshTokenRequest{
-					RefreshToken: refresh_token,
-				})
-				if err != nil {
-					slog.Error("Invalid refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
-					c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
-					c.Abort()
-					return
-				}
-				if userID.UserId != 0 {
-					_, err = authGRPCService.RemoveOldRefreshToken(ctx, &authpb.RemoveOldRefreshTokenRequest{
-						UserId:       userID.UserId,
-						RefreshToken: refresh_token,
-					})
-					if err != nil {
-						slog.Error("Failed to remove old refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
-						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove old refresh token"})
-						c.Abort()
-						return
-					}
-					new_access_token, err := authGRPCService.GenerateAccessToken(ctx, &authpb.GenerateAccessTokenRequest{
-						UserId: userID.UserId,
-					})
-					if err != nil {
-						slog.Error("Failed to generate new access token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
-						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new access token"})
-						c.Abort()
-						return
-					}
-					new_refresh_token, err := authGRPCService.GenerateRefreshToken(ctx, &authpb.GenerateRefreshTokenRequest{
-						UserId: userID.UserId,
-					})
-					if err != nil {
-						slog.Error("Failed to generate new refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
-						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate new refresh token"})
-						c.Abort()
-						return
-					}
-
-					_, err = authGRPCService.SaveNewRefreshToken(ctx, &authpb.SaveNewRefreshTokenRequest{
-						UserId:       userID.UserId,
-						RefreshToken: new_refresh_token.RefreshToken,
-						ExpiresAt:    time.Now().Add(RefreshTokenTTL).Unix(),
-					})
-					if err != nil {
-						slog.Error("Failed to save new refresh token", slogger.Err(err), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
-						c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save new refresh token"})
-						c.Abort()
-						return
-					}
-					c.Header("Authorization", "Bearer "+new_access_token.AccessToken)
-					SetRefreshTokenCookie(c, new_refresh_token.RefreshToken)
-					c.Set("user_id", uint(userID.UserId))
-					c.Next()
-					return
-
-				} else {
-					slog.Error("Authorization is required", slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
-					c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization is required"})
-					c.Abort()
-					return
-				}
-
-			} else {
-				slog.Error("Authorization is required", slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
-				c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization is required"})
-				c.Abort()
-				return
-
-			}
+			slog.Error("Authorization is required, Token is empty", slog.String("status", fmt.Sprintf("%d", http.StatusUnauthorized)))
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization is required, Token is empty"})
+			c.Abort()
+			return
 		}
 
 	})
@@ -153,5 +153,6 @@ func GetUserId(c *gin.Context) (uint, error) {
 }
 
 func SetRefreshTokenCookie(c *gin.Context, refreshToken string) {
-	c.SetCookie("refresh_token", refreshToken, int(RefreshTokenTTL.Seconds()), "/", "", true, true)
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("refresh_token", refreshToken, int(RefreshTokenTTL.Seconds()), "/", "", false, true)
 }

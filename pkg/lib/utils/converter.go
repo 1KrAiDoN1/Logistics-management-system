@@ -42,7 +42,26 @@ func ConvertOrderItemToGoodsItem(orderItem []*orderpb.OrderItem) []entity.GoodsI
 			ProductName: item.ProductName,
 			Price:       item.Price,
 			Quantity:    item.Quantity,
+			TotalPrice:  item.TotalPrice,
 		}
 	}
 	return goodsItems
+}
+
+func ConvertGoodsItemSliceToOrderItemSlice(goodsItems []entity.GoodsItem) []*orderpb.OrderItem {
+	if goodsItems == nil {
+		return nil
+	}
+
+	orderItems := make([]*orderpb.OrderItem, len(goodsItems))
+	for i, goodsItem := range goodsItems {
+		orderItems[i] = &orderpb.OrderItem{
+			ProductId:   goodsItem.ProductID,
+			ProductName: goodsItem.ProductName,
+			Price:       goodsItem.Price,
+			Quantity:    goodsItem.Quantity,
+			TotalPrice:  goodsItem.TotalPrice,
+		}
+	}
+	return orderItems
 }

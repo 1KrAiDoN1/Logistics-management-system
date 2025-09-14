@@ -69,7 +69,7 @@ func (a *AuthRepository) RemoveRefreshToken(ctx context.Context, userID int64, r
 }
 
 func (a *AuthRepository) GetUserIDbyRefreshToken(ctx context.Context, refreshToken string) (int64, error) {
-	query := `SELECT user_id FROM refresh_tokens WHERE token = $1`
+	query := `SELECT user_id FROM refresh_tokens WHERE token = $1 AND expires_at > EXTRACT(EPOCH FROM NOW())`
 	var userID int64
 	err := a.pool.QueryRow(ctx, query, refreshToken).Scan(&userID)
 	if err != nil {

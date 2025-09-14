@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	AccessTokenTTL = 15 * time.Minute
+	AccessTokenTTL = 120 * time.Minute
 )
 
 type AuthGRPCService struct {

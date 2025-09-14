@@ -8,7 +8,7 @@ type Order struct {
 	DeliveryAddress string      `json:"delivery_address" db:"delivery_address"`
 	Items           []GoodsItem `json:"items"`
 	TotalAmount     float64     `json:"total_amount" db:"total_amount"`
-	DriverID        *int64      `json:"driver_id" db:"driver_id"`
+	DriverID        *int64      `json:"driver_id,omitempty" db:"driver_id"`
 	CreatedAt       int64       `json:"created_at" db:"created_at"`
 }
 
@@ -27,9 +27,10 @@ const (
 
 // OrderItem - товар в заказе
 type GoodsItem struct {
-	ProductID   int64   `json:"product_id" db:"product_id"`
+	ProductID   int64   `json:"product_id,omitempty" db:"product_id"`
 	ProductName string  `json:"product_name" db:"product_name"`
 	Price       float64 `json:"price" db:"price"`
 	Quantity    int32   `json:"quantity" db:"quantity"`
-	LastUpdated int64   `json:"last_updated" db:"last_updated"`
+	TotalPrice  float64 `json:"total_price" db:"total_price"`
+	LastUpdated int64   `json:"last_updated,,omitempty" db:"last_updated"`
 }
