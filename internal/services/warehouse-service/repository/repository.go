@@ -24,37 +24,39 @@ func (w *WarehouseRepository) CheckStockAvailability(ctx context.Context, orders
 		return true, nil
 	}
 
-	// Собираем ID товаров для проверки
-	productIDs := make([]int64, 0, len(orders))
+	productNames := make([]string, 0, len(orders))
 	for _, item := range orders {
-		productIDs = append(productIDs, item.ProductID)
+		productNames = append(productNames, item.ProductName)
 	}
 
-	// Получаем текущие остатки
-	query := `SELECT product_id, quantity FROM warehouse_stock WHERE product_id = ANY($1)`
+	// Получаем текущие остатки по именам продуктов
+	query := `SELECT product_name, quantity FROM warehouse_stock WHERE product_name = ANY($1)`
 
-	rows, err := w.pool.Query(ctx, query, productIDs)
+	rows, err := w.pool.Query(ctx, query, productNames)
 	if err != nil {
 		return false, fmt.Errorf("failed to get stock: %w", err)
 	}
 	defer rows.Close()
 
-	// Создаем мапу остатков
-	stock := make(map[int64]int32)
+	// Создаем мапу остатков по именам продуктов
+	stock := make(map[string]int32)
 	for rows.Next() {
-		var productID int64
+		var productName string
 		var quantity int32
-		if err := rows.Scan(&productID, &quantity); err != nil {
+		if err := rows.Scan(&productName, &quantity); err != nil {
 			return false, err
 		}
-		stock[productID] = quantity
+		stock[productName] = quantity
 	}
 
 	// Проверяем достаточность остатков
 	for _, item := range orders {
-		available, exists := stock[item.ProductID]
-		if !exists || available < item.Quantity {
-			return false, nil
+		available, exists := stock[item.ProductName]
+		if !exists {
+			return false, nil // Товар не найден на складе
+		}
+		if available < item.Quantity {
+			return false, nil // Недостаточно товара
 		}
 	}
 

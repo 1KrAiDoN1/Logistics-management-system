@@ -23,12 +23,13 @@ func SetupOrderRoutes(router *gin.RouterGroup, orderHandler handler.OrderHandler
 		orders.GET("/:order_id", orderHandler.GetOrderByID)
 		orders.POST("/:order_id/assign-driver", orderHandler.AssignDriver)
 		orders.GET("/delivery", orderHandler.GetDeliveries)
+		orders.POST("/:order_id/complete_delivery", orderHandler.CompleteOrder)
 	}
 }
 
 func SetupWarehouseRoutes(router *gin.RouterGroup, warehouseHandler handler.WarehouseHandlerInterface) {
 	warehouse := router.Group("/store")
 	{
-		warehouse.GET("/products", warehouseHandler.GetAvailableProducts) // Список товаров
+		warehouse.GET("/products", warehouseHandler.GetAvailableProducts)
 	}
 }

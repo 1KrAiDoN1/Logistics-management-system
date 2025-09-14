@@ -1,13 +1,9 @@
 package kafka
 
-import "time"
-
 type KafkaConfig struct {
-	Brokers          []string
-	Topic            string
-	AutoOffsetReset  string
-	SessionTimeout   time.Duration
-	RebalanceTimeout time.Duration
+	Brokers  []string
+	Topic    string
+	Group_id string
 }
 
 type Msg struct {

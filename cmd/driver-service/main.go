@@ -48,9 +48,10 @@ func main() {
 	driverGRPCService := driverservice.NewDriverGRPCService(log, driverGRPCRepository, kafkaProducer)
 
 	driverGRPCApp := app.NewApp(log, driverGRPCService, driverGRPCServiceConfig)
+	log.Info("Driver service started successfully", "address", driverGRPCServiceConfig.Address)
+
 	if err := driverGRPCApp.Run(); err != nil {
 		log.Error("Failed to run driver gRPC application", slogger.Err(err))
 		os.Exit(1)
 	}
-	log.Info("Driver service started successfully", "address", driverGRPCServiceConfig.Address)
 }

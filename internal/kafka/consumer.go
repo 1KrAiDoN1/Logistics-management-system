@@ -18,9 +18,9 @@ func NewKafkaConsumer(log *slog.Logger, cfg KafkaConfig) *KafkaConsumer {
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:          cfg.Brokers,
 			Topic:            cfg.Topic,
-			GroupID:          "order-service-group",
+			GroupID:          cfg.Group_id,
 			MinBytes:         1,
-			MaxBytes:         10e6, // 10MB
+			MaxBytes:         10e4,
 			CommitInterval:   time.Second,
 			StartOffset:      kafka.LastOffset,
 			ReadBatchTimeout: 100 * time.Millisecond,

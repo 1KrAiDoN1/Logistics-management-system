@@ -39,9 +39,9 @@ func main() {
 	warehouseGRPCService := warehouseservice.NewWarehouseGRPCService(log, warehouseGRPCRepository)
 
 	warehouseGRPCApp := app.NewApp(log, warehouseGRPCService, warehouseGRPCServiceConfig)
+	log.Info("Warehouse service configuration loaded successfully", "address", warehouseGRPCServiceConfig.Address)
 	if err := warehouseGRPCApp.Run(); err != nil {
 		log.Error("Failed to run warehouse gRPC application", slogger.Err(err))
 		os.Exit(1)
 	}
-	log.Info("Warehouse service configuration loaded successfully", "address", warehouseGRPCServiceConfig.Address)
 }
