@@ -21,9 +21,11 @@ type DriverFoundMessage struct {
 // KafkaProducer структура для продюсера
 type KafkaProducer struct {
 	writer *kafka.Writer
+	config KafkaConfig
+	logger *slog.Logger
 }
 
-func NewKafkaProducer(cfg KafkaConfig) *KafkaProducer {
+func NewKafkaProducer(cfg KafkaConfig, log *slog.Logger) *KafkaProducer {
 	return &KafkaProducer{
 		writer: &kafka.Writer{
 			Addr:         kafka.TCP(cfg.Brokers...),
@@ -34,15 +36,22 @@ func NewKafkaProducer(cfg KafkaConfig) *KafkaProducer {
 			BatchTimeout: 10 * time.Millisecond, // Быстрее отправка батчей
 			WriteTimeout: 5 * time.Second,
 		},
+		config: cfg,
+		logger: log,
 	}
 }
 
 func (kp *KafkaProducer) SendMessage(ctx context.Context, msg kafka.Message) error {
-
+	kp.logger.Info("Attempting to send message to Kafka",
+		slog.String("topic", kp.writer.Topic),
+		slog.String("key", string(msg.Key)),
+		slog.Int("value_size", len(msg.Value)))
 	err := kp.writer.WriteMessages(ctx, msg)
 	if err != nil {
+		kp.logger.Error("Failed to send message to Kafka", slog.String("error", err.Error()))
 		return fmt.Errorf("failed to send message: %w", err)
 	}
+	kp.logger.Info("Message sent to Kafka", slog.String("topic", kp.writer.Topic), slog.String("key", string(msg.Value)))
 
 	return nil
 }
@@ -51,56 +60,81 @@ func (kp *KafkaProducer) Close() error {
 	return kp.writer.Close()
 }
 
-func CreateTopicIfNotExists() error {
-	conn, err := kafka.Dial("tcp", "localhost:9092")
+func (kp *KafkaProducer) HealthCheck(ctx context.Context) error {
+	// Создаем временное соединение для проверки
+	conn, err := kafka.DialContext(ctx, "tcp", kp.config.Brokers[0])
 	if err != nil {
-		return fmt.Errorf("не удалось подключиться к Kafka: %w", err)
+		return fmt.Errorf("failed to dial Kafka: %w", err)
 	}
 	defer conn.Close()
 
-	// Получаем список топиков
-	partitions, err := conn.ReadPartitions()
+	// Проверяем, что можем получить метаданные
+	_, err = conn.Brokers()
 	if err != nil {
-		return fmt.Errorf("не удалось получить список разделов: %w", err)
-	}
-
-	// Проверяем, существует ли топик
-	topicExists := false
-	for _, p := range partitions {
-		if p.Topic == "drivers" {
-			topicExists = true
-			break
-		}
-	}
-
-	if !topicExists {
-		// Создаем топик
-		controller, err := conn.Controller()
-		if err != nil {
-			return fmt.Errorf("не удалось получить контроллер: %w", err)
-		}
-
-		controllerConn, err := kafka.Dial("tcp", fmt.Sprintf("%s:%d", controller.Host, controller.Port))
-		if err != nil {
-			return fmt.Errorf("не удалось подключиться к контроллеру: %w", err)
-		}
-		defer controllerConn.Close()
-
-		topicConfig := kafka.TopicConfig{
-			Topic:             "drivers",
-			NumPartitions:     1,
-			ReplicationFactor: 1,
-		}
-
-		err = controllerConn.CreateTopics(topicConfig)
-		if err != nil {
-			return fmt.Errorf("не удалось создать топик: %w", err)
-		}
-
-		slog.Info("✅ Топик 'drivers' создан")
-	} else {
-		slog.Info("✅ Топик 'drivers' уже существует")
+		return fmt.Errorf("failed to get brokers: %w", err)
 	}
 
 	return nil
 }
+
+func (kp *KafkaProducer) IsHealthy() bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := kp.HealthCheck(ctx)
+	return err == nil
+}
+
+// func CreateTopicIfNotExists() error {
+// 	conn, err := kafka.Dial("tcp", "localhost:9092")
+// 	if err != nil {
+// 		return fmt.Errorf("не удалось подключиться к Kafka: %w", err)
+// 	}
+// 	defer conn.Close()
+
+// 	// Получаем список топиков
+// 	partitions, err := conn.ReadPartitions()
+// 	if err != nil {
+// 		return fmt.Errorf("не удалось получить список разделов: %w", err)
+// 	}
+
+// 	// Проверяем, существует ли топик
+// 	topicExists := false
+// 	for _, p := range partitions {
+// 		if p.Topic == "drivers" {
+// 			topicExists = true
+// 			break
+// 		}
+// 	}
+
+// 	if !topicExists {
+// 		// Создаем топик
+// 		controller, err := conn.Controller()
+// 		if err != nil {
+// 			return fmt.Errorf("не удалось получить контроллер: %w", err)
+// 		}
+
+// 		controllerConn, err := kafka.Dial("tcp", fmt.Sprintf("%s:%d", controller.Host, controller.Port))
+// 		if err != nil {
+// 			return fmt.Errorf("не удалось подключиться к контроллеру: %w", err)
+// 		}
+// 		defer controllerConn.Close()
+
+// 		topicConfig := kafka.TopicConfig{
+// 			Topic:             "drivers",
+// 			NumPartitions:     1,
+// 			ReplicationFactor: 1,
+// 		}
+
+// 		err = controllerConn.CreateTopics(topicConfig)
+// 		if err != nil {
+// 			return fmt.Errorf("не удалось создать топик: %w", err)
+// 		}
+
+// 		slog.Info("✅ Топик 'drivers' создан")
+// 	} else {
+// 		slog.Info("✅ Топик 'drivers' уже существует")
+// 	}
+
+// 	return nil
+// }

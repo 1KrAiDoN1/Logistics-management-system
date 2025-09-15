@@ -27,9 +27,8 @@ func main() {
 		log.Error("Failed to get database connection string", slogger.Err(err))
 		os.Exit(1)
 	}
-	_ = dbConnstr
 
-	db, err := postgres.NewDatabase(ctx, "")
+	db, err := postgres.NewDatabase(ctx, dbConnstr)
 	if err != nil {
 		log.Error("Failed to connect to the database", slogger.Err(err))
 		os.Exit(1)
@@ -52,11 +51,12 @@ func main() {
 	orderGRPCService := orderservice.NewOrderGRPCService(log, orderGRPCRepository, kafkaConsumer, redis.Client)
 	orderGRPCApp := app.NewApp(log, orderGRPCService, orderGRPCServiceConfig)
 	log.Info("Auth service configuration loaded successfully", "address", orderGRPCServiceConfig.Address)
+	log.Info("KafkaConfigGroup", "group", orderGRPCServiceConfig.KafkaConfig.Group_id)
+
+	log.Info("Order service configuration loaded successfully", "address", orderGRPCServiceConfig.Address)
 
 	if err := orderGRPCApp.Run(); err != nil {
 		log.Error("Failed to run auth gRPC application", slogger.Err(err))
 		os.Exit(1)
 	}
-
-	log.Info("Order service configuration loaded successfully", "address", orderGRPCServiceConfig.Address)
 }

@@ -46,6 +46,7 @@ message SignUpRequest {
   string confirm_password = 3;
   string first_name = 4;
   string last_name = 5;
+  int64 time_of_registration = 6;
 }
 
 // Ответ на регистрацию
@@ -69,6 +70,7 @@ message SignInResponse {
   string first_name = 3;
   string last_name = 4;
   string access_token = 5;
+  string refresh_token = 6;
 }
 
 // Запрос на выход из системы
@@ -131,6 +133,7 @@ message GenerateRefreshTokenResponse {
 message SaveNewRefreshTokenRequest {
   int64 user_id = 1;
   string refresh_token = 2;
+  int64 expires_at = 3;
 }
 
 message RemoveOldRefreshTokenRequest {

@@ -25,7 +25,6 @@ import (
 )
 
 type Server struct {
-	// HTTP сервер
 	router *gin.Engine
 
 	authGRPCClient authpb.AuthServiceClient
@@ -69,8 +68,8 @@ func NewServer(logger *slog.Logger, microservices_config *configs.MicroservicesC
 
 	handlers := handler.NewHandlers(logger, authGRPCClient, orderGRPCClient, driverGRPCClient, warehouseGRPCClient)
 	return &Server{
-		router: router,
-		// authGRPCClient:       authGRPCClient,
+		router:               router,
+		authGRPCClient:       authGRPCClient,
 		handlers:             handlers,
 		microservices_config: microservices_config,
 		logger:               logger,
@@ -131,9 +130,7 @@ func (s *Server) setupRoutes() {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(s.authGRPCClient))
 	{
-		// routes.SetupUserRoutes(protected, s.handlers.UserHandlerInterface)
-		// routes.SetupCategoryRoutes(protected, s.handlers.CategoryHandlerInterface)
-		// routes.SetupExpenseRoutes(protected, s.handlers.ExpenseHandlerInterface)
-		// routes.SetupBudgetRoutes(protected, s.handlers.BudgetHandlerInterface)
+		routes.SetupOrderRoutes(protected, s.handlers.OrderHandlerInterface)
+		routes.SetupWarehouseRoutes(protected, s.handlers.WarehouseHandlerInterface)
 	}
 }

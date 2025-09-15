@@ -26,11 +26,12 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, order *entity.Order) 
 	}
 	defer tx.Rollback(ctx)
 
-	query := `INSERT INTO orders (user_id, status, delivery_address, total_amount, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	query := `INSERT INTO orders (user_id, driver_id, status, delivery_address, total_amount, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 
 	var orderID int64
 	err = tx.QueryRow(ctx, query,
 		order.UserID,
+		0,
 		order.Status,
 		order.DeliveryAddress,
 		order.TotalAmount,
@@ -41,7 +42,7 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, order *entity.Order) 
 	}
 
 	if len(order.Items) > 0 {
-		itemsQuery := `INSERT INTO order_items (order_id, product_id, product_name, price, quantity, last_updated) VALUES ($1, $2, $3, $4, $5, $6)`
+		itemsQuery := `INSERT INTO order_items (order_id, product_id, product_name, price, quantity, total_price, last_updated) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 
 		batch := &pgx.Batch{}
 		for _, item := range order.Items {
@@ -51,6 +52,7 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, order *entity.Order) 
 				item.ProductName,
 				item.Price,
 				item.Quantity,
+				item.TotalPrice,
 				item.LastUpdated,
 			)
 		}
@@ -78,9 +80,18 @@ func (o *OrderRepository) CompleteDelivery(ctx context.Context, userID, orderID 
 	return nil
 }
 
+func (o *OrderRepository) CheckDeliveryStatus(ctx context.Context, userID, orderID int64) (string, error) {
+	query := `SELECT status FROM orders WHERE id = $1 AND user_id = $2`
+	var status string
+	err := o.pool.QueryRow(ctx, query, orderID, userID).Scan(&status)
+	if err != nil {
+		return "", err
+	}
+	return status, nil
+}
 func (o *OrderRepository) GetDeliveriesByUser(ctx context.Context, userID int64) ([]*entity.Order, error) {
-	query := `SELECT id, user_id, status, total_amount, delivery_address, created_at FROM orders WHERE user_id = $1 ORDER BY created_at DESC`
-	rows, err := o.pool.Query(ctx, query, userID)
+	query := `SELECT id, user_id, status, total_amount, delivery_address, created_at FROM orders WHERE user_id = $1 AND status = $2 ORDER BY created_at DESC`
+	rows, err := o.pool.Query(ctx, query, userID, entity.StatusInProgress)
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +112,16 @@ func (o *OrderRepository) GetDeliveriesByUser(ctx context.Context, userID int64)
 	return orders, nil
 }
 
+func (o *OrderRepository) GetOrderItemPrice(ctx context.Context, productName string) (float64, error) {
+	query := `SELECT price FROM warehouse_stock WHERE product_name = $1`
+	var price float64
+	err := o.pool.QueryRow(ctx, query, productName).Scan(&price)
+	if err != nil {
+		return 0, err
+	}
+	return price, nil
+}
+
 func (o *OrderRepository) GetOrderDetails(ctx context.Context, userID, orderID int64) (*entity.Order, error) {
 	query := `SELECT id, user_id, status, total_amount, delivery_address, created_at, driver_id FROM orders WHERE id = $1`
 	row := o.pool.QueryRow(ctx, query, orderID)
@@ -112,7 +133,7 @@ func (o *OrderRepository) GetOrderDetails(ctx context.Context, userID, orderID i
 	}
 
 	// Fetch order items
-	itemsQuery := `SELECT product_id, product_name, price, quantity FROM order_items WHERE order_id = $1`
+	itemsQuery := `SELECT product_id, product_name, price, quantity, total_price FROM order_items WHERE order_id = $1`
 	itemsRows, err := o.pool.Query(ctx, itemsQuery, orderID)
 	if err != nil {
 		return nil, err
@@ -122,7 +143,7 @@ func (o *OrderRepository) GetOrderDetails(ctx context.Context, userID, orderID i
 	var items []entity.GoodsItem
 	for itemsRows.Next() {
 		var item entity.GoodsItem
-		err := itemsRows.Scan(&item.ProductID, &item.ProductName, &item.Price, &item.Quantity)
+		err := itemsRows.Scan(&item.ProductID, &item.ProductName, &item.Price, &item.Quantity, &item.TotalPrice)
 		if err != nil {
 			return nil, err
 		}

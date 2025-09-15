@@ -14,6 +14,8 @@ service OrderService {
   rpc GetOrdersByUser(GetOrdersByUserRequest) returns (GetOrdersByUserResponse);
   rpc CompleteDelivery(CompleteDeliveryRequest) returns (CompleteDeliveryResponse);
   rpc GetDeliveries(GetDeliveriesByUserRequest) returns (GetDeliveriesByUserResponse);
+  rpc GetOrderItemPrice(GetOrderItemPriceRequest) returns (GetOrderItemPriceResponse);
+  rpc CheckOrderStatus(CheckOrderStatusRequest) returns (CheckOrderStatusResponse);
 }
 
 // Messages
@@ -21,6 +23,15 @@ message CreateOrderRequest {
   int64 user_id = 1;
   string delivery_address = 2;
   repeated OrderItem items = 3;
+}
+
+message CheckOrderStatusRequest {
+  int64 user_id = 1;
+  int64 order_id = 2;
+}
+
+message CheckOrderStatusResponse {
+  string status = 1;
 }
 
 message CreateOrderResponse {
@@ -57,6 +68,14 @@ message GetOrderDetailsRequest {
   int64 user_id = 1;
   int64 order_id = 2;
   
+}
+
+message GetOrderItemPriceRequest {
+  string product_name = 1;
+}
+
+message GetOrderItemPriceResponse {
+  double price = 1;
 }
 
 message GetOrderDetailsResponse {
@@ -99,6 +118,7 @@ message OrderItem {
   string product_name = 3;
   int32 quantity = 4;
   double price = 5;
+  double total_price = 6;
 }
 
 

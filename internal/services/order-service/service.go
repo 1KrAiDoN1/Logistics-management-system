@@ -40,16 +40,35 @@ func RegisterOrderServiceServer(s *grpc.Server, srv *OrderGRPCService) {
 	orderpb.RegisterOrderServiceServer(s, srv)
 }
 
+func (o *OrderGRPCService) GetOrderItemPrice(ctx context.Context, req *orderpb.GetOrderItemPriceRequest) (*orderpb.GetOrderItemPriceResponse, error) {
+	price, err := o.orderRepo.GetOrderItemPrice(ctx, req.ProductName)
+	if err != nil {
+		o.logger.Error("failed to get item price", slog.String("status", "error"), slogger.Err(err))
+		return nil, err
+	}
+	return &orderpb.GetOrderItemPriceResponse{
+		Price: price,
+	}, nil
+}
+
 func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateOrderRequest) (*orderpb.CreateOrderResponse, error) {
 	order := &entity.Order{
 		UserID:          req.UserId,
 		Status:          entity.StatusPending,
 		Items:           utils.ConvertOrderItemToGoodsItem(req.Items),
 		DeliveryAddress: req.DeliveryAddress,
-		CreatedAt:       time.Now(),
+		CreatedAt:       time.Now().Unix(),
 	}
 	order.TotalAmount = 0
 	for _, item := range order.Items {
+
+		price, err := o.orderRepo.GetOrderItemPrice(ctx, item.ProductName)
+		if err != nil {
+			o.logger.Error("failed to get item price", slog.String("status", "error"), slogger.Err(err))
+			return nil, err
+		}
+		item.Price = price
+		item.TotalPrice = price * float64(item.Quantity)
 		order.TotalAmount += item.Price * float64(item.Quantity)
 	}
 
@@ -59,13 +78,24 @@ func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		return nil, err
 	}
 
+	orderJSON, err := json.Marshal(*order)
+	if err != nil {
+		o.logger.Error("failed to marshal order", slogger.Err(err))
+	} else {
+		// Сохраняем
+		err = o.redisClient.Set(ctx, fmt.Sprintf("user:%d_order:%d", req.UserId, orderID), orderJSON, 15*time.Minute).Err()
+		if err != nil {
+			o.logger.Error("failed to cache order in redis", slogger.Err(err))
+		}
+	}
+
 	return &orderpb.CreateOrderResponse{
 		Order: &orderpb.Order{
 			Id:          orderID,
 			UserId:      order.UserID,
-			Items:       req.Items,
+			Items:       utils.ConvertGoodsItemSliceToOrderItemSlice(order.Items),
 			TotalAmount: order.TotalAmount,
-			CreatedAt:   timestamppb.New(order.CreatedAt),
+			CreatedAt:   timestamppb.New(time.Unix(order.CreatedAt, 0)),
 			Status:      string(order.Status),
 		},
 	}, nil
@@ -89,46 +119,64 @@ func (o *OrderGRPCService) AssignDriver(ctx context.Context, req *orderpb.Assign
 
 	case kafkamessage := <-out:
 
-		var message entity.Msg
+		var message entity.DriverKafka
 		err := json.Unmarshal(kafkamessage.Value, &message)
 		if err != nil {
-			o.logger.Error("❌ Failed to unmarshal message", slog.String("error", err.Error()))
-			return nil, err
+			o.logger.Error("Failed to unmarshal message", slog.String("error", err.Error()))
+			return &orderpb.AssignDriverResponse{}, err
 		}
+		o.logger.Info("Received Kafka message", slog.String("key", string(kafkamessage.Key)), slog.String("value", string(kafkamessage.Value)))
 
-		// Подтверждаем сообщение
-		if err := o.kafkaConsumer.CommitMessage(ctx, kafkamessage); err != nil {
-			o.logger.Error("Failed to commit message", slog.String("error", err.Error()))
-		}
-
-		stats, err := o.UpdateOrderStatus(ctx, &orderpb.UpdateOrderStatusRequest{})
+		stats, err := o.UpdateOrderStatus(ctx, &orderpb.UpdateOrderStatusRequest{
+			UserId:   req.UserId,
+			OrderId:  req.OrderId,
+			DriverId: message.ID,
+			Status:   string(entity.StatusInProgress),
+		})
 		if err != nil {
-			o.logger.Error("❌ Failed to update order status", slog.String("status", "error"), slog.String("error", err.Error()))
+			o.logger.Error("Failed to update order status", slog.String("status", "error"), slog.String("error", err.Error()))
+			return &orderpb.AssignDriverResponse{}, err
 		}
 		if !stats.Success {
-			o.logger.Error("❌ Not success. Failed to update order status", slog.String("status", "error"), slog.String("error", err.Error()))
+			o.logger.Error("Not success, failed to update order status")
+			return &orderpb.AssignDriverResponse{}, err
+		}
+
+		if err := o.kafkaConsumer.CommitMessage(ctx, kafkamessage); err != nil {
+			o.logger.Error("Failed to commit message", slog.String("error", err.Error()))
 			return &orderpb.AssignDriverResponse{}, err
 		}
 		return &orderpb.AssignDriverResponse{
-			DriverId: message.Driver.ID,
-			OrderId:  message.OrderId,
+			DriverId: message.ID,
+			OrderId:  req.OrderId,
 			Success:  true,
 			Message:  stats.Message,
 		}, nil
 
 	case err := <-errCh:
-		o.logger.Error("❌ Failed to consume message", slog.String("error", err.Error()))
+		o.logger.Error("Failed to consume message", slog.String("error", err.Error()))
 		return nil, err
 
 	case <-ctx.Done():
-		o.logger.Error("❌ Context cancelled", slog.String("error", ctx.Err().Error()))
+		o.logger.Error("Context cancelled", slog.String("error", ctx.Err().Error()))
 		return nil, ctx.Err()
 	}
 
 }
 
 func (o *OrderGRPCService) CompleteDelivery(ctx context.Context, req *orderpb.CompleteDeliveryRequest) (*orderpb.CompleteDeliveryResponse, error) {
-	err := o.orderRepo.CompleteDelivery(ctx, req.UserId, req.OrderId)
+	status, err := o.orderRepo.CheckDeliveryStatus(ctx, req.UserId, req.OrderId)
+	if err != nil {
+		o.logger.Error("failed to check delivery status", slog.String("status", "error"), slogger.Err(err))
+		return nil, err
+	}
+	if status != string(entity.StatusInProgress) {
+		return &orderpb.CompleteDeliveryResponse{
+			Success: false,
+			Message: fmt.Sprintf("Cannot complete delivery. Current order status is: %s", status),
+		}, nil
+	}
+	err = o.orderRepo.CompleteDelivery(ctx, req.UserId, req.OrderId)
 	if err != nil {
 		o.logger.Error("failed to complete delivery", slog.String("status", "error"), slogger.Err(err))
 		return nil, err
@@ -169,7 +217,7 @@ func (o *OrderGRPCService) GetDeliveries(ctx context.Context, req *orderpb.GetDe
 			Items:           items,
 			TotalAmount:     order.TotalAmount,
 			DriverId:        driverID,
-			CreatedAt:       timestamppb.New(order.CreatedAt),
+			CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
 		})
 	}
 	return &orderpb.GetDeliveriesByUserResponse{
@@ -178,6 +226,44 @@ func (o *OrderGRPCService) GetDeliveries(ctx context.Context, req *orderpb.GetDe
 }
 
 func (o *OrderGRPCService) GetOrderDetails(ctx context.Context, req *orderpb.GetOrderDetailsRequest) (*orderpb.GetOrderDetailsResponse, error) {
+	orderJSON, err := o.redisClient.Get(ctx, fmt.Sprintf("user:%d_order:%d", req.UserId, req.OrderId)).Result()
+	if err != nil && err != redis.Nil {
+		o.logger.Error("failed to get order from redis", slogger.Err(err))
+	} else if err == nil {
+		var order entity.Order
+		err = json.Unmarshal([]byte(orderJSON), &order)
+		if err != nil {
+			o.logger.Error("failed to unmarshal order from redis", slogger.Err(err))
+		} else {
+			items := make([]*orderpb.OrderItem, 0, len(order.Items))
+			for _, item := range order.Items {
+				items = append(items, &orderpb.OrderItem{
+					ProductId:   item.ProductID,
+					ProductName: item.ProductName,
+					Price:       item.Price,
+					Quantity:    item.Quantity,
+					TotalPrice:  item.TotalPrice,
+				})
+			}
+			var driverID int64
+			if order.DriverID != nil {
+				driverID = *order.DriverID
+			}
+			return &orderpb.GetOrderDetailsResponse{
+				Order: &orderpb.Order{
+					Id:              order.ID,
+					UserId:          order.UserID,
+					Status:          string(order.Status),
+					DeliveryAddress: order.DeliveryAddress,
+					Items:           items,
+					TotalAmount:     order.TotalAmount,
+					DriverId:        driverID,
+					CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
+				},
+			}, nil
+		}
+	}
+
 	order, err := o.orderRepo.GetOrderDetails(ctx, req.UserId, req.OrderId)
 	if err != nil {
 		o.logger.Error("failed to get order details", slog.String("status", "error"), slogger.Err(err))
@@ -193,6 +279,7 @@ func (o *OrderGRPCService) GetOrderDetails(ctx context.Context, req *orderpb.Get
 			ProductName: item.ProductName,
 			Price:       item.Price,
 			Quantity:    item.Quantity,
+			TotalPrice:  item.TotalPrice,
 		})
 	}
 	var driverID int64
@@ -208,7 +295,7 @@ func (o *OrderGRPCService) GetOrderDetails(ctx context.Context, req *orderpb.Get
 			Items:           items,
 			TotalAmount:     order.TotalAmount,
 			DriverId:        driverID,
-			CreatedAt:       timestamppb.New(order.CreatedAt),
+			CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
 		},
 	}, nil
 }
@@ -228,6 +315,7 @@ func (o *OrderGRPCService) GetOrdersByUser(ctx context.Context, req *orderpb.Get
 				ProductName: item.ProductName,
 				Price:       item.Price,
 				Quantity:    item.Quantity,
+				TotalPrice:  item.TotalPrice,
 			})
 		}
 		var driverID int64
@@ -242,11 +330,22 @@ func (o *OrderGRPCService) GetOrdersByUser(ctx context.Context, req *orderpb.Get
 			Items:           items,
 			TotalAmount:     order.TotalAmount,
 			DriverId:        driverID,
-			CreatedAt:       timestamppb.New(order.CreatedAt),
+			CreatedAt:       timestamppb.New(time.Unix(order.CreatedAt, 0)),
 		})
 	}
 	return &orderpb.GetOrdersByUserResponse{
 		Orders: orders,
+	}, nil
+}
+
+func (o *OrderGRPCService) CheckOrderStatus(ctx context.Context, req *orderpb.CheckOrderStatusRequest) (*orderpb.CheckOrderStatusResponse, error) {
+	status, err := o.orderRepo.CheckDeliveryStatus(ctx, req.UserId, req.OrderId)
+	if err != nil {
+		o.logger.Error("failed to check order status", slog.String("status", "error"), slogger.Err(err))
+		return nil, err
+	}
+	return &orderpb.CheckOrderStatusResponse{
+		Status: status,
 	}, nil
 }
 
@@ -258,6 +357,30 @@ func (o *OrderGRPCService) UpdateOrderStatus(ctx context.Context, req *orderpb.U
 			Success: false,
 			Message: fmt.Sprintf("Failed to update order status to %s for order ID: %d", req.Status, req.OrderId),
 		}, nil
+	}
+	orderJSON, err := o.redisClient.Get(ctx, fmt.Sprintf("user:%d_order:%d", req.UserId, req.OrderId)).Result()
+	if err != nil && err != redis.Nil {
+		o.logger.Error("failed to get order from redis", slogger.Err(err))
+	} else if err == nil {
+		var order entity.Order
+		err = json.Unmarshal([]byte(orderJSON), &order)
+		if err != nil {
+			o.logger.Error("failed to unmarshal order from redis", slogger.Err(err))
+		} else {
+			order.Status = entity.OrderStatus(req.Status)
+			if req.DriverId != 0 {
+				order.DriverID = &req.DriverId
+			}
+			updatedOrderJSON, err := json.Marshal(order)
+			if err != nil {
+				o.logger.Error("failed to marshal updated order", slogger.Err(err))
+			} else {
+				err = o.redisClient.Set(ctx, fmt.Sprintf("user:%d_order:%d", req.UserId, req.OrderId), updatedOrderJSON, 15*time.Minute).Err()
+				if err != nil {
+					o.logger.Error("failed to update cached order in redis", slogger.Err(err))
+				}
+			}
+		}
 	}
 	return &orderpb.UpdateOrderStatusResponse{
 		Success: true,

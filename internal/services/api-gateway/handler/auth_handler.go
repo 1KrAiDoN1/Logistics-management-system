@@ -37,14 +37,15 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	}
 
 	user, err := h.authGRPCClient.SignUp(ctx, &authpb.SignUpRequest{
-		Email:           userReg.Email,
-		Password:        userReg.Password,
-		ConfirmPassword: userReg.ConfirmPassword,
-		FirstName:       userReg.FirstName,
-		LastName:        userReg.LastName,
+		Email:              userReg.Email,
+		Password:           userReg.Password,
+		ConfirmPassword:    userReg.ConfirmPassword,
+		FirstName:          userReg.FirstName,
+		LastName:           userReg.LastName,
+		TimeOfRegistration: time.Now().Unix(),
 	})
 	if err != nil {
-		h.logger.Error("Failed to register user", slogger.Err(err), slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)))
+		h.logger.Error("Failed to register user", slogger.Err(err), slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -71,7 +72,15 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	// middleware.SetRefreshTokenCookie(c, token.RefreshToken)
+	_, err = h.authGRPCClient.SaveNewRefreshToken(ctx, &authpb.SaveNewRefreshTokenRequest{
+		UserId:       token.UserId,
+		RefreshToken: token.RefreshToken,
+		ExpiresAt:    time.Now().Add(middleware.RefreshTokenTTL).Unix(),
+	})
+	if err != nil {
+		h.logger.Error("Failed to save refresh token", slogger.Err(err), slog.String("email", userAuth.Email), slog.String("status", fmt.Sprintf("%d", http.StatusInternalServerError)))
+	}
+	middleware.SetRefreshTokenCookie(c, token.RefreshToken)
 
 	c.Header("Authorization", "Bearer "+token.AccessToken)
 
@@ -86,8 +95,9 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 		},
 	})
 }
+
 func (h *AuthHandler) Logout(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {

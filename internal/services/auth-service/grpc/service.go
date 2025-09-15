@@ -18,28 +18,24 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
-	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
-	JWTokenTTL      = 24 * time.Hour
-	RefreshTokenTTL = 30 * 24 * time.Hour
+	AccessTokenTTL = 120 * time.Minute
 )
 
 type AuthGRPCService struct {
 	authpb.UnimplementedAuthServiceServer
 	log            *slog.Logger
 	authrepository domain.AuthRepositoryInterface
-	redisClient    *redis.Client
 }
 
-func NewAuthGRPCService(log *slog.Logger, repository domain.AuthRepositoryInterface, redisClient *redis.Client) *AuthGRPCService {
+func NewAuthGRPCService(log *slog.Logger, repository domain.AuthRepositoryInterface) *AuthGRPCService {
 	return &AuthGRPCService{
 		log:            log,
 		authrepository: repository,
-		redisClient:    redisClient,
 	}
 }
 
@@ -66,7 +62,7 @@ func (s *AuthGRPCService) SignUp(ctx context.Context, req *authpb.SignUpRequest)
 		Password:           hashedPassword,
 		FirstName:          req.FirstName,
 		LastName:           req.LastName,
-		TimeOfRegistration: time.Now().Unix(),
+		TimeOfRegistration: req.TimeOfRegistration,
 	}
 
 	userID, err := s.authrepository.CreateUser(ctx, user)
@@ -74,7 +70,6 @@ func (s *AuthGRPCService) SignUp(ctx context.Context, req *authpb.SignUpRequest)
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	// Реализация логики регистрации пользователя
 	return &authpb.SignUpResponse{
 		UserId:    userID,
 		Email:     req.Email,
@@ -99,15 +94,19 @@ func (s *AuthGRPCService) SignIn(ctx context.Context, req *authpb.SignInRequest)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
-	// refreshToken, err := s.GenerateRefreshToken(ctx, &authpb.GenerateRefreshTokenRequest{
-	// 	UserId: int64(user.ID),
-	// })
+	refreshToken, err := s.GenerateRefreshToken(ctx, &authpb.GenerateRefreshTokenRequest{
+		UserId: int64(user.ID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+	}
 	return &authpb.SignInResponse{
-		UserId:      int64(user.ID),
-		Email:       user.Email,
-		FirstName:   user.FirstName,
-		LastName:    user.LastName,
-		AccessToken: accessToken.AccessToken,
+		UserId:       int64(user.ID),
+		Email:        user.Email,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		AccessToken:  accessToken.AccessToken,
+		RefreshToken: refreshToken.RefreshToken,
 	}, nil
 
 	//ДОБАВИТЬ КЭШИРОВАНИЕ
@@ -178,7 +177,7 @@ func (s *AuthGRPCService) GenerateAccessToken(ctx context.Context, req *authpb.G
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		Subject:   strconv.Itoa(int(req.UserId)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(JWTokenTTL)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenTTL)),
 	})
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -229,7 +228,7 @@ func (s *AuthGRPCService) RemoveOldRefreshToken(ctx context.Context, req *authpb
 }
 
 func (s *AuthGRPCService) SaveNewRefreshToken(ctx context.Context, req *authpb.SaveNewRefreshTokenRequest) (*emptypb.Empty, error) {
-	err := s.authrepository.SaveNewRefreshToken(ctx, req.UserId, req.RefreshToken)
+	err := s.authrepository.SaveNewRefreshToken(ctx, req.UserId, req.RefreshToken, req.ExpiresAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save new refresh token: %w", err)
 	}

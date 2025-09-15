@@ -26,6 +26,8 @@ const (
 	OrderService_GetOrdersByUser_FullMethodName   = "/order.OrderService/GetOrdersByUser"
 	OrderService_CompleteDelivery_FullMethodName  = "/order.OrderService/CompleteDelivery"
 	OrderService_GetDeliveries_FullMethodName     = "/order.OrderService/GetDeliveries"
+	OrderService_GetOrderItemPrice_FullMethodName = "/order.OrderService/GetOrderItemPrice"
+	OrderService_CheckOrderStatus_FullMethodName  = "/order.OrderService/CheckOrderStatus"
 )
 
 // OrderServiceClient is the client API for OrderService service.
@@ -41,6 +43,8 @@ type OrderServiceClient interface {
 	GetOrdersByUser(ctx context.Context, in *GetOrdersByUserRequest, opts ...grpc.CallOption) (*GetOrdersByUserResponse, error)
 	CompleteDelivery(ctx context.Context, in *CompleteDeliveryRequest, opts ...grpc.CallOption) (*CompleteDeliveryResponse, error)
 	GetDeliveries(ctx context.Context, in *GetDeliveriesByUserRequest, opts ...grpc.CallOption) (*GetDeliveriesByUserResponse, error)
+	GetOrderItemPrice(ctx context.Context, in *GetOrderItemPriceRequest, opts ...grpc.CallOption) (*GetOrderItemPriceResponse, error)
+	CheckOrderStatus(ctx context.Context, in *CheckOrderStatusRequest, opts ...grpc.CallOption) (*CheckOrderStatusResponse, error)
 }
 
 type orderServiceClient struct {
@@ -121,6 +125,26 @@ func (c *orderServiceClient) GetDeliveries(ctx context.Context, in *GetDeliverie
 	return out, nil
 }
 
+func (c *orderServiceClient) GetOrderItemPrice(ctx context.Context, in *GetOrderItemPriceRequest, opts ...grpc.CallOption) (*GetOrderItemPriceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetOrderItemPriceResponse)
+	err := c.cc.Invoke(ctx, OrderService_GetOrderItemPrice_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) CheckOrderStatus(ctx context.Context, in *CheckOrderStatusRequest, opts ...grpc.CallOption) (*CheckOrderStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CheckOrderStatusResponse)
+	err := c.cc.Invoke(ctx, OrderService_CheckOrderStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OrderServiceServer is the server API for OrderService service.
 // All implementations must embed UnimplementedOrderServiceServer
 // for forward compatibility.
@@ -134,6 +158,8 @@ type OrderServiceServer interface {
 	GetOrdersByUser(context.Context, *GetOrdersByUserRequest) (*GetOrdersByUserResponse, error)
 	CompleteDelivery(context.Context, *CompleteDeliveryRequest) (*CompleteDeliveryResponse, error)
 	GetDeliveries(context.Context, *GetDeliveriesByUserRequest) (*GetDeliveriesByUserResponse, error)
+	GetOrderItemPrice(context.Context, *GetOrderItemPriceRequest) (*GetOrderItemPriceResponse, error)
+	CheckOrderStatus(context.Context, *CheckOrderStatusRequest) (*CheckOrderStatusResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
 
@@ -164,6 +190,12 @@ func (UnimplementedOrderServiceServer) CompleteDelivery(context.Context, *Comple
 }
 func (UnimplementedOrderServiceServer) GetDeliveries(context.Context, *GetDeliveriesByUserRequest) (*GetDeliveriesByUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeliveries not implemented")
+}
+func (UnimplementedOrderServiceServer) GetOrderItemPrice(context.Context, *GetOrderItemPriceRequest) (*GetOrderItemPriceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrderItemPrice not implemented")
+}
+func (UnimplementedOrderServiceServer) CheckOrderStatus(context.Context, *CheckOrderStatusRequest) (*CheckOrderStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckOrderStatus not implemented")
 }
 func (UnimplementedOrderServiceServer) mustEmbedUnimplementedOrderServiceServer() {}
 func (UnimplementedOrderServiceServer) testEmbeddedByValue()                      {}
@@ -312,6 +344,42 @@ func _OrderService_GetDeliveries_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OrderService_GetOrderItemPrice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrderItemPriceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).GetOrderItemPrice(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_GetOrderItemPrice_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).GetOrderItemPrice(ctx, req.(*GetOrderItemPriceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_CheckOrderStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckOrderStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).CheckOrderStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: OrderService_CheckOrderStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).CheckOrderStatus(ctx, req.(*CheckOrderStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OrderService_ServiceDesc is the grpc.ServiceDesc for OrderService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -346,6 +414,14 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDeliveries",
 			Handler:    _OrderService_GetDeliveries_Handler,
+		},
+		{
+			MethodName: "GetOrderItemPrice",
+			Handler:    _OrderService_GetOrderItemPrice_Handler,
+		},
+		{
+			MethodName: "CheckOrderStatus",
+			Handler:    _OrderService_CheckOrderStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

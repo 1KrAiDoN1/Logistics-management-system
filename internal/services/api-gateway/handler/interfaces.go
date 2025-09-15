@@ -17,12 +17,6 @@ type OrderHandlerInterface interface {
 	GetDeliveries(c *gin.Context)
 }
 
-type AdminHandlerInterface interface {
-	GetMetrics(c *gin.Context)
-	GetLogs(c *gin.Context)
-	GetSystemInfo(c *gin.Context)
-}
-
 type WarehouseHandlerInterface interface {
 	GetAvailableProducts(c *gin.Context)
 }

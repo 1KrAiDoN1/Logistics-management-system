@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"logistics/pkg/lib/logger/slogger"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -16,15 +15,15 @@ type RedisClient struct {
 }
 
 type RedisConfig struct {
-	Address      string `yaml:"address"`
-	Password     string `yaml:"password"`
-	DB           int    `yaml:"db"`
-	PoolSize     int    `yaml:"pool_size"`
-	MinIdleConns int    `yaml:"min_idle_conns"`
-	MaxRetries   int    `yaml:"max_retries"`
-	DialTimeout  int    `yaml:"dial_timeout_seconds"`
-	ReadTimeout  int    `yaml:"read_timeout_seconds"`
-	WriteTimeout int    `yaml:"write_timeout_seconds"`
+	Address      string `mapstructure:"address"`
+	Password     string `mapstructure:"password"`
+	DB           int    `mapstructure:"db"`
+	PoolSize     int    `mapstructure:"pool_size"`
+	MinIdleConns int    `mapstructure:"min_idle_conns"`
+	MaxRetries   int    `mapstructure:"max_retries"`
+	DialTimeout  int    `mapstructure:"dial_timeout_seconds"`
+	ReadTimeout  int    `mapstructure:"read_timeout_seconds"`
+	WriteTimeout int    `mapstructure:"write_timeout_seconds"`
 }
 
 func NewRedisClient(cfg RedisConfig) (*RedisClient, error) {
@@ -36,29 +35,28 @@ func NewRedisClient(cfg RedisConfig) (*RedisClient, error) {
 		PoolSize:     cfg.PoolSize,     // 2x количество CPU cores
 		MinIdleConns: cfg.MinIdleConns, // Половина от PoolSize
 		MaxRetries:   cfg.MaxRetries,   // Количество повторов
-		DialTimeout:  time.Duration(cfg.DialTimeout),
-		ReadTimeout:  time.Duration(cfg.ReadTimeout),
-		WriteTimeout: time.Duration(cfg.WriteTimeout),
+		DialTimeout:  time.Duration(cfg.DialTimeout) * time.Second,
+		ReadTimeout:  time.Duration(cfg.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
 	})
+	slog.Info("Redis connection attempt",
+		slog.String("address", cfg.Address),
+		slog.Int("dial_timeout", cfg.DialTimeout))
 
-	// Проверяем подключение
-	_, err := client.Ping(ctx).Result()
+	pingCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	_, err := client.Ping(pingCtx).Result()
 	if err != nil {
-		slog.Error("Failed to connect Redis", slogger.Err(err), slog.String("address", cfg.Address))
-		return nil, err
+		slog.Error("Redis ping failed",
+			slog.String("error", err.Error()),
+			slog.String("address", cfg.Address))
+		return nil, fmt.Errorf("redis ping failed: %w", err)
 	}
+
+	slog.Info("Redis ping successful")
 	slog.Info("Connected to Redis", slog.String("address", cfg.Address))
-	err = client.Set(ctx, "example_key", "example_value", 0).Err()
-	if err != nil {
-		slog.Error("Ошибка при установке значения в Redis", slogger.Err(err), slog.String("key", "example_key"))
-		return nil, err
-	}
-	res, err := client.Get(ctx, "example_key").Result()
-	if err != nil {
-		slog.Error("Ошибка при получении значения из Redis", slogger.Err(err), slog.String("key", "example_key"))
-		return nil, err
-	}
-	slog.Info("Successfully set and retrieved value from Redis", slog.String("key", "example_key"), slog.String("value", res))
+
 	redisClient := &RedisClient{
 		Client: client,
 		ctx:    ctx,

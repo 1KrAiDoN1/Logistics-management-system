@@ -11,6 +11,7 @@ import (
 	"logistics/internal/shared/entity"
 	"logistics/internal/shared/models/dto"
 	"logistics/pkg/lib/logger/slogger"
+	"logistics/pkg/lib/utils"
 	"net/http"
 	"strconv"
 	"sync"
@@ -56,18 +57,16 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// Используем errgroup для параллельных операций
 	g, gctx := errgroup.WithContext(ctx)
 
-	// Результаты параллельных операций
 	var (
-		stockResult *warehousepb.CheckStockResponse
-		mu          sync.RWMutex // защищаем результаты
+		available bool
+		mu        sync.RWMutex
 	)
 
 	// Проверка наличия товаров на складе
 	g.Go(func() error {
-		o.stockCheckWorkers <- struct{}{} // семафор для ограничения горутин
+		o.stockCheckWorkers <- struct{}{}
 		defer func() { <-o.stockCheckWorkers }()
 
 		stockReq := &warehousepb.CheckStockRequest{
@@ -84,9 +83,10 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 		if err != nil {
 			return fmt.Errorf("stock check failed: %w", err)
 		}
+		o.logger.Info("Stock check completed", slog.String("status", "success"), slog.Bool("available", result.Available))
 
 		mu.Lock()
-		stockResult = result
+		available = result.Available
 		mu.Unlock()
 
 		return nil
@@ -103,7 +103,7 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 
 	// Проверяем результаты (с защитой мьютексом)
 	mu.RLock()
-	if !stockResult.Available {
+	if !available {
 		mu.RUnlock()
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Stock not available",
@@ -112,11 +112,35 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 	mu.RUnlock()
+	o.logger.Info("All parallel operations completed successfully", slog.String("status", "success"), slog.Bool("stock_available", available))
 
 	// Создаем заказ
+	orderItems := make([]*orderpb.OrderItem, len(req.Items))
+	for i, item := range req.Items {
+		price, err := o.orderGRPCClient.GetOrderItemPrice(ctx, &orderpb.GetOrderItemPriceRequest{
+			ProductName: item.ProductName,
+		})
+		if err != nil {
+			o.logger.Error("Failed to get item price", "error", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Failed to get item price",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		totalPrice := price.Price * float64(item.Quantity)
+
+		orderItems[i] = &orderpb.OrderItem{
+			ProductName: item.ProductName,
+			Quantity:    int32(item.Quantity),
+			Price:       price.Price,
+			TotalPrice:  totalPrice,
+		}
+	}
 	orderReq := &orderpb.CreateOrderRequest{
 		UserId:          int64(userID),
-		Items:           convertToOrderItems(req.Items),
+		Items:           orderItems, // Используем уже заполненный слайс
 		DeliveryAddress: req.DeliveryAddress,
 	}
 
@@ -136,30 +160,17 @@ func (o *OrderHandler) CreateOrder(c *gin.Context) {
 			ID:              orderResp.Order.Id,
 			UserID:          orderReq.UserId,
 			Status:          entity.OrderStatus(orderResp.Order.Status),
+			Items:           utils.ConvertOrderItemToGoodsItem(orderResp.Order.Items),
 			TotalAmount:     orderResp.Order.TotalAmount,
 			DeliveryAddress: orderReq.DeliveryAddress,
-			CreatedAt:       orderResp.Order.CreatedAt.AsTime(),
+			CreatedAt:       orderResp.Order.CreatedAt.AsTime().Unix(),
 		},
 		Message: "Order created successfully",
 	})
 }
 
-func convertToOrderItems(createItems []dto.CreateOrderItem) []*orderpb.OrderItem {
-	orderItems := make([]*orderpb.OrderItem, len(createItems))
-
-	for i, item := range createItems {
-		orderItems[i] = &orderpb.OrderItem{
-			// ProductId:   item.ProductID,
-			ProductName: item.ProductName,
-			Quantity:    item.Quantity,
-		}
-	}
-
-	return orderItems
-}
-
 func (o *OrderHandler) GetOrders(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -183,8 +194,9 @@ func (o *OrderHandler) GetOrders(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, orders)
 }
+
 func (o *OrderHandler) GetOrderByID(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -218,8 +230,9 @@ func (o *OrderHandler) GetOrderByID(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, order)
 }
+
 func (o *OrderHandler) AssignDriver(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -234,6 +247,38 @@ func (o *OrderHandler) AssignDriver(c *gin.Context) {
 		o.logger.Error("Invalid order_id", slog.String("status", fmt.Sprintf("%d", http.StatusBadRequest)), slogger.Err(err))
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid order_id",
+		})
+		return
+	}
+	orderStatus, err := o.orderGRPCClient.CheckOrderStatus(ctx, &orderpb.CheckOrderStatusRequest{
+		UserId:  int64(userID),
+		OrderId: int64(orderID),
+	})
+	if err != nil {
+		o.logger.Error("Failed to check order status", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to check order status",
+			"message": err.Error(),
+		})
+		return
+	}
+	if orderStatus.Status != string(entity.StatusPending) {
+		o.logger.Error("Order is not in pending status, other driver assignment is not possible", slog.String("status", orderStatus.Status))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Order is not in pending status, other driver assignment is not possible",
+			"message": fmt.Sprintf("Current order status: %s", orderStatus.Status),
+		})
+		return
+	}
+
+	_, err = o.driverGRPCClient.FindSuitableDriver(ctx, &driverpb.FindDriverRequest{
+		OrderId: int64(orderID),
+	})
+	if err != nil {
+		o.logger.Error("Failed to find suitable driver", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to find suitable driver",
+			"message": err.Error(),
 		})
 		return
 	}
@@ -255,7 +300,7 @@ func (o *OrderHandler) AssignDriver(c *gin.Context) {
 }
 
 func (o *OrderHandler) GetDeliveries(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {
@@ -281,7 +326,7 @@ func (o *OrderHandler) GetDeliveries(c *gin.Context) {
 }
 
 func (o *OrderHandler) CompleteOrder(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	userID, err := middleware.GetUserId(c)
 	if err != nil {

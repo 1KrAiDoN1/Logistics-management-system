@@ -6,7 +6,6 @@ import (
 	auth_grpc_server "logistics/internal/services/auth-service/grpc"
 	"logistics/internal/services/auth-service/grpc/app"
 	auth_grpc_repository "logistics/internal/services/auth-service/grpc/repository"
-	"logistics/pkg/cache/redis"
 	"logistics/pkg/database/postgres"
 	"logistics/pkg/lib/logger/slogger"
 	"os"
@@ -34,15 +33,8 @@ func main() {
 	dbpool := db.GetPool()
 	defer db.Close()
 
-	redis, err := redis.NewRedisClient(authGRPCServiceConfig.RedisConfig)
-	if err != nil {
-		log.Error("Failed to connect to Redis", slogger.Err(err))
-		os.Exit(1)
-	}
-	defer redis.Close()
-
 	authGRPCRepository := auth_grpc_repository.NewAuthRepository(dbpool)
-	authGRPCService := auth_grpc_server.NewAuthGRPCService(log, authGRPCRepository, redis.Client)
+	authGRPCService := auth_grpc_server.NewAuthGRPCService(log, authGRPCRepository)
 	authGRPCApp := app.NewApp(log, authGRPCService, authGRPCServiceConfig)
 	log.Info("Auth service configuration loaded successfully", "address", authGRPCServiceConfig.Address)
 

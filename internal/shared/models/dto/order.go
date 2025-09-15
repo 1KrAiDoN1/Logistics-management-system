@@ -13,7 +13,6 @@ type CreateOrderRequest struct {
 }
 
 type CreateOrderItem struct {
-	// ProductID   int64   `json:"product_id" validate:"required"`
 	ProductName string `json:"product_name" validate:"required"`
 	Quantity    int32  `json:"quantity" validate:"required,min=1"`
 }
