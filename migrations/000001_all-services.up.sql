@@ -72,13 +72,13 @@ INSERT INTO warehouse_stock (product_name, quantity, price, last_updated) VALUES
 ('Клавиатура механическая', 30, 129.99, 1757808000); 
 
 INSERT INTO drivers (name, phone, email, license_number, car, status) VALUES
-('Иванов Петр Сергеевич', '+79161234567', 'ivanov@mail.ru', 'AB123456', 'Toyota Camry 2020, гос.номер А123АА777', 'online'),
+('Иванов Петр Сергеевич', '+79161234567', 'ivanov@mail.ru', 'AB123456', 'Toyota Camry 2020, гос.номер А123АА777', 'available'),
 ('Смирнова Анна Викторовна', '+79169876543', 'smirnova@gmail.com', 'CD654321', 'Hyundai Solaris 2019, гос.номер В456ВВ777', 'offline'),
-('Козлов Дмитрий Иванович', '+79167778899', 'kozlov@yandex.ru', 'EF789012', 'Kia Rio 2021, гос.номер С789СС777', 'online'),
-('Петрова Мария Олеговна', '+79165554433', 'petrova@mail.ru', 'GH345678', 'Volkswagen Polo 2022, гос.номер Е012ЕЕ777', 'online'),
+('Козлов Дмитрий Иванович', '+79167778899', 'kozlov@yandex.ru', 'EF789012', 'Kia Rio 2021, гос.номер С789СС777', 'available'),
+('Петрова Мария Олеговна', '+79165554433', 'petrova@mail.ru', 'GH345678', 'Volkswagen Polo 2022, гос.номер Е012ЕЕ777', 'available'),
 ('Сидоров Алексей Николаевич', '+79162223344', 'sidorov@gmail.com', 'IJ901234', 'Skoda Octavia 2020, гос.номер К345КК777', 'offline'),
-('Федорова Екатерина Дмитриевна', '+79163334455', 'fedorova@yandex.ru', 'KL567890', 'Renault Logan 2018, гос.номер М678ММ777', 'online'),
-('Николаев Артем Валерьевич', '+79164445566', 'nikolaev@mail.ru', 'MN123789', 'Lada Vesta 2021, гос.номер Н901НН777', 'online'),
+('Федорова Екатерина Дмитриевна', '+79163334455', 'fedorova@yandex.ru', 'KL567890', 'Renault Logan 2018, гос.номер М678ММ777', 'available'),
+('Николаев Артем Валерьевич', '+79164445566', 'nikolaev@mail.ru', 'MN123789', 'Lada Vesta 2021, гос.номер Н901НН777', 'available'),
 ('Орлова Юлия Сергеевна', '+79165556677', 'orlova@gmail.com', 'OP456012', 'Chevrolet Cruze 2019, гос.номер О234ОО777', 'offline'),
-('Белов Максим Андреевич', '+79166667788', 'belov@yandex.ru', 'QR789345', 'Ford Focus 2020, гос.номер П567ПП777', 'online'),
-('Алексеева Светлана Игоревна', '+79167778899', 'alekseeva@mail.ru', 'ST012678', 'Nissan Almera 2022, гос.номер Р890РР777', 'online');
+('Белов Максим Андреевич', '+79166667788', 'belov@yandex.ru', 'QR789345', 'Ford Focus 2020, гос.номер П567ПП777', 'available'),
+('Алексеева Светлана Игоревна', '+79167778899', 'alekseeva@mail.ru', 'ST012678', 'Nissan Almera 2022, гос.номер Р890РР777', 'available');

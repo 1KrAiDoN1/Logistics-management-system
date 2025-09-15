@@ -250,6 +250,27 @@ func (o *OrderHandler) AssignDriver(c *gin.Context) {
 		})
 		return
 	}
+	orderStatus, err := o.orderGRPCClient.CheckOrderStatus(ctx, &orderpb.CheckOrderStatusRequest{
+		UserId:  int64(userID),
+		OrderId: int64(orderID),
+	})
+	if err != nil {
+		o.logger.Error("Failed to check order status", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to check order status",
+			"message": err.Error(),
+		})
+		return
+	}
+	if orderStatus.Status != string(entity.StatusPending) {
+		o.logger.Error("Order is not in pending status, other driver assignment is not possible", slog.String("status", orderStatus.Status))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Order is not in pending status, other driver assignment is not possible",
+			"message": fmt.Sprintf("Current order status: %s", orderStatus.Status),
+		})
+		return
+	}
+
 	_, err = o.driverGRPCClient.FindSuitableDriver(ctx, &driverpb.FindDriverRequest{
 		OrderId: int64(orderID),
 	})

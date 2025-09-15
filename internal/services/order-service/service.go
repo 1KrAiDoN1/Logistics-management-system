@@ -338,6 +338,17 @@ func (o *OrderGRPCService) GetOrdersByUser(ctx context.Context, req *orderpb.Get
 	}, nil
 }
 
+func (o *OrderGRPCService) CheckOrderStatus(ctx context.Context, req *orderpb.CheckOrderStatusRequest) (*orderpb.CheckOrderStatusResponse, error) {
+	status, err := o.orderRepo.CheckDeliveryStatus(ctx, req.UserId, req.OrderId)
+	if err != nil {
+		o.logger.Error("failed to check order status", slog.String("status", "error"), slogger.Err(err))
+		return nil, err
+	}
+	return &orderpb.CheckOrderStatusResponse{
+		Status: status,
+	}, nil
+}
+
 func (o *OrderGRPCService) UpdateOrderStatus(ctx context.Context, req *orderpb.UpdateOrderStatusRequest) (*orderpb.UpdateOrderStatusResponse, error) {
 	err := o.orderRepo.UpdateOrderStatus(ctx, req.UserId, req.OrderId, req.DriverId, req.Status)
 	if err != nil {
