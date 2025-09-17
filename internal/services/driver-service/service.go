@@ -90,16 +90,6 @@ func (d *DriverGRPCService) FindSuitableDriver(ctx context.Context, req *driverp
 		return &driverpb.FindDriverResponse{}, err
 	}
 
-	resp, err := d.UpdateDriverStatus(ctx, &driverpb.UpdateDriverStatusRequest{
-		DriverId: selectedDriver.DriverId,
-		Status:   string(entity.DriverStatusBusy),
-	})
-
-	if !resp.Success {
-		d.logger.Error("Failed to update driver status", slog.String("status", "error"), slogger.Err(err))
-		return &driverpb.FindDriverResponse{}, err
-	}
-
 	return &driverpb.FindDriverResponse{
 		Driver:  selectedDriver,
 		Success: true,

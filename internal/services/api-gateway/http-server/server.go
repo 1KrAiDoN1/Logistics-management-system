@@ -20,6 +20,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -120,7 +122,7 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) setupRoutes() {
-	//s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	api := s.router.Group("/api/v1")
 
 	// Public routes

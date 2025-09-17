@@ -40,14 +40,15 @@ func RegisterOrderServiceServer(s *grpc.Server, srv *OrderGRPCService) {
 	orderpb.RegisterOrderServiceServer(s, srv)
 }
 
-func (o *OrderGRPCService) GetOrderItemPrice(ctx context.Context, req *orderpb.GetOrderItemPriceRequest) (*orderpb.GetOrderItemPriceResponse, error) {
-	price, err := o.orderRepo.GetOrderItemPrice(ctx, req.ProductName)
+func (o *OrderGRPCService) GetOrderItemInfo(ctx context.Context, req *orderpb.GetOrderItemInfoRequest) (*orderpb.GetOrderItemInfoResponse, error) {
+	product_id, price, err := o.orderRepo.GetOrderItemInfo(ctx, req.ProductName)
 	if err != nil {
 		o.logger.Error("failed to get item price", slog.String("status", "error"), slogger.Err(err))
 		return nil, err
 	}
-	return &orderpb.GetOrderItemPriceResponse{
-		Price: price,
+	return &orderpb.GetOrderItemInfoResponse{
+		ProductId: int64(product_id),
+		Price:     price,
 	}, nil
 }
 
@@ -57,16 +58,17 @@ func (o *OrderGRPCService) CreateOrder(ctx context.Context, req *orderpb.CreateO
 		Status:          entity.StatusPending,
 		Items:           utils.ConvertOrderItemToGoodsItem(req.Items),
 		DeliveryAddress: req.DeliveryAddress,
-		CreatedAt:       time.Now().Unix(),
+		CreatedAt:       req.Time,
 	}
 	order.TotalAmount = 0
 	for _, item := range order.Items {
 
-		price, err := o.orderRepo.GetOrderItemPrice(ctx, item.ProductName)
+		product_id, price, err := o.orderRepo.GetOrderItemInfo(ctx, item.ProductName)
 		if err != nil {
 			o.logger.Error("failed to get item price", slog.String("status", "error"), slogger.Err(err))
 			return nil, err
 		}
+		item.ProductID = int64(product_id)
 		item.Price = price
 		item.TotalPrice = price * float64(item.Quantity)
 		order.TotalAmount += item.Price * float64(item.Quantity)
@@ -150,7 +152,7 @@ func (o *OrderGRPCService) AssignDriver(ctx context.Context, req *orderpb.Assign
 			DriverId: message.ID,
 			OrderId:  req.OrderId,
 			Success:  true,
-			Message:  stats.Message,
+			Message:  fmt.Sprintf("Driver: %s, Phone: %s, Car: %s, Licence Number: %s", message.Name, message.Phone, message.Car, message.LicenseNumber),
 		}, nil
 
 	case err := <-errCh:
@@ -176,14 +178,15 @@ func (o *OrderGRPCService) CompleteDelivery(ctx context.Context, req *orderpb.Co
 			Message: fmt.Sprintf("Cannot complete delivery. Current order status is: %s", status),
 		}, nil
 	}
-	err = o.orderRepo.CompleteDelivery(ctx, req.UserId, req.OrderId)
+	driverID, err := o.orderRepo.CompleteDelivery(ctx, req.UserId, req.OrderId)
 	if err != nil {
 		o.logger.Error("failed to complete delivery", slog.String("status", "error"), slogger.Err(err))
 		return nil, err
 	}
 	return &orderpb.CompleteDeliveryResponse{
-		Success: true,
-		Message: fmt.Sprintf("Delivery completed successfully, order ID: %d", req.OrderId),
+		Success:  true,
+		DriverId: driverID,
+		Message:  fmt.Sprintf("Delivery completed successfully, order ID: %d", req.OrderId),
 	}, nil
 
 }

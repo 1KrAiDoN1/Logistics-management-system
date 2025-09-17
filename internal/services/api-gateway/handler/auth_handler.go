@@ -26,6 +26,16 @@ func NewAuthHandler(logger *slog.Logger, authClient authpb.AuthServiceClient) *A
 	}
 }
 
+// @Summary Регистрация пользователя
+// @Description Создает нового пользователя в системе
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param   request body dto.RegisterRequest true "Данные для регистрации"
+// @Success 201 {object} object{user_id=int64,email=string,first_name=string,last_name=string} "Успешная регистрация"
+// @Failure 400 {object} object{error=string} "Некорректные данные"
+// @Failure 500 {object} object{error=string} "Ошибка сервера"
+// @Router /auth/signup [post]
 func (h *AuthHandler) SignUp(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
@@ -50,9 +60,20 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		return
 	}
 	h.logger.Info("User registered successfully", slog.String("email", userReg.Email), slog.String("status", fmt.Sprintf("%d", http.StatusCreated)))
-	c.JSON(http.StatusCreated, gin.H{"user": user})
+	c.JSON(http.StatusCreated, gin.H{"user": user.UserId, "email": user.Email, "first_name": user.FirstName, "last_name": user.LastName})
 }
 
+// @Summary Аутентификация пользователя
+// @Description Выполняет вход пользователя и возвращает токены
+// @Tags auth
+// @Accept  json
+// @Produce  json
+// @Param   request body dto.LoginRequest true "Данные для входа"
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} object{error=string} "Некорректные данные"
+// @Failure 401 {object} object{error=string} "Неверные учетные данные"
+// @Failure 500 {object} object{error=string} "Ошибка сервера"
+// @Router /auth/signin [post]
 func (h *AuthHandler) SignIn(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
@@ -96,6 +117,14 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 	})
 }
 
+// @Summary Выход из системы
+// @Description Выполняет выход пользователя и удаляет refresh token
+// @Tags auth
+// @Produce  json
+// @Success 200 {object} object{message=string}
+// @Failure 500 {object} object{error=string} "Ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
