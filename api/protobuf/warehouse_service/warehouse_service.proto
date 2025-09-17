@@ -4,7 +4,6 @@ package warehouse;
 option go_package = "/warehouse";
 
 import "google/protobuf/empty.proto";
-import "google/protobuf/timestamp.proto";
 
 // Warehouse Service
 service WarehouseService {
@@ -30,6 +29,7 @@ message GetWarehouseStockResponse {
 
 message UpdateStockRequest {
   repeated StockItem items = 1;
+  int64 Time = 2;
 }
 
 message UpdateStockResponse {
@@ -37,8 +37,10 @@ message UpdateStockResponse {
 }
 
 message StockItem {
-  string product_name = 1;
-  int32 quantity = 2;
+  int64 product_id = 1;
+  string product_name = 2;
+  int32 quantity = 3;
+  int64 time = 4;
 }
 
 message StockItemWithWarehouse {
@@ -50,6 +52,7 @@ message Stock {
   int64 product_id = 1;
   string product_name = 2;
   int32 quantity = 3;
-  google.protobuf.Timestamp updated_at = 4;
+  double price = 4;
+  int64 time = 5;
 }
  
