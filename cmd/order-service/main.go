@@ -47,6 +47,11 @@ func main() {
 
 	defer kafkaConsumer.Close()
 
+	if err := kafka.EnsureTopicExists(ctx, orderGRPCServiceConfig.KafkaConfig, log); err != nil {
+		log.Error("Failed to ensure Kafka topic exists", slogger.Err(err))
+		os.Exit(1)
+	}
+
 	orderGRPCRepository := repository.NewOrderRepository(dbpool)
 	orderGRPCService := orderservice.NewOrderGRPCService(log, orderGRPCRepository, kafkaConsumer, redis.Client)
 	orderGRPCApp := app.NewApp(log, orderGRPCService, orderGRPCServiceConfig)

@@ -41,7 +41,14 @@ func main() {
 		log.Error("Kafka is not available. Cannot start service.")
 		os.Exit(1)
 	}
+
 	defer kafkaProducer.Close()
+
+	if err := kafka.EnsureTopicExists(ctx, driverGRPCServiceConfig.KafkaConfig, log); err != nil {
+		log.Error("Failed to ensure Kafka topic exists", slogger.Err(err))
+		os.Exit(1)
+	}
+
 	log.Info("Kafka producer initialized", "brokers", driverGRPCServiceConfig.KafkaConfig.Brokers, "topic", driverGRPCServiceConfig.KafkaConfig.Topic)
 
 	driverGRPCRepository := repository.NewDriverRepository(dbpool)
