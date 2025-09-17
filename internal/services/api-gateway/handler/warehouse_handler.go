@@ -29,7 +29,7 @@ func NewWarehouseHandler(logger *slog.Logger, warehouseClient warehousepb.Wareho
 // @Produce  json
 // @Success 200 {object} object{message=string,products=[]entity.GoodsItem} "Список товаров"
 // @Failure 500 {object} object{error=string} "Ошибка сервера"
-// @Router /warehouse/products [get]
+// @Router /store/products [get]
 func (w *WarehouseHandler) GetAvailableProducts(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

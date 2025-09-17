@@ -9,7 +9,16 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -56,7 +65,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/signin": {
+        "/auth/sign-in": {
             "post": {
                 "description": "Выполняет вход пользователя и возвращает токены",
                 "consumes": [
@@ -123,7 +132,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/signup": {
+        "/auth/sign-up": {
             "post": {
                 "description": "Создает нового пользователя в системе",
                 "consumes": [
@@ -186,121 +195,6 @@ const docTemplate = `{
                             "type": "object",
                             "properties": {
                                 "error": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/deliveries": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Возвращает все доставки текущего авторизованного пользователя",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "deliveries"
-                ],
-                "summary": "Получение списка доставок",
-                "responses": {
-                    "200": {
-                        "description": "Если доставок нет",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Ошибка сервера",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                },
-                                "message": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/deliveries/{order_id}/complete": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Отмечает доставку как завершенную и обновляет статус водителя",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "deliveries"
-                ],
-                "summary": "Завершение доставки",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "ID заказа",
-                        "name": "order_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Успешное завершение",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "driver_id": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                },
-                                "message": {
-                                    "type": "string"
-                                },
-                                "success": {
-                                    "type": "boolean"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Неверный ID заказа",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Ошибка сервера",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "error": {
-                                    "type": "string"
-                                },
-                                "message": {
                                     "type": "string"
                                 }
                             }
@@ -421,6 +315,121 @@ const docTemplate = `{
                 }
             }
         },
+        "/orders/deliveries": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает все доставки текущего авторизованного пользователя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deliveries"
+                ],
+                "summary": "Получение списка доставок",
+                "responses": {
+                    "200": {
+                        "description": "Если доставок нет",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/orders/deliveries/{order_id}/complete_delivery": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Отмечает доставку как завершенную и обновляет статус водителя",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "deliveries"
+                ],
+                "summary": "Завершение доставки",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID заказа",
+                        "name": "order_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешное завершение",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "driver_id": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный ID заказа",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Ошибка сервера",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "error": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/orders/{order_id}": {
             "get": {
                 "security": [
@@ -480,7 +489,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/orders/{order_id}/assign": {
+        "/orders/{order_id}/assign-driver": {
             "post": {
                 "security": [
                     {
@@ -558,7 +567,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/warehouse/products": {
+        "/store/products": {
             "get": {
                 "description": "Возвращает список всех товаров доступных на складе",
                 "produces": [
@@ -867,17 +876,25 @@ const docTemplate = `{
                 "StatusFailed"
             ]
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Введите 'Bearer ' followed by your JWT token",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:9091",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Logistics Management API",
+	Description:      "API для управления логистическими операциями включая аутентификацию, заказы, доставки и управление складом, построенный на базе нескольких микросервисов с использованием gRPC и REST.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

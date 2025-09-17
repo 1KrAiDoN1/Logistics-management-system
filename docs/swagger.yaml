@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   dto.AuthResponse:
     description: Ответ с токеном доступа и информацией о пользователе
@@ -198,8 +199,21 @@ definitions:
     - StatusDelivered
     - StatusCancelled
     - StatusFailed
+host: localhost:9091
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API для управления логистическими операциями включая аутентификацию,
+    заказы, доставки и управление складом, построенный на базе нескольких микросервисов
+    с использованием gRPC и REST.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Logistics Management API
+  version: "1.0"
 paths:
   /auth/logout:
     post:
@@ -226,7 +240,7 @@ paths:
       summary: Выход из системы
       tags:
       - auth
-  /auth/signin:
+  /auth/sign-in:
     post:
       consumes:
       - application/json
@@ -269,7 +283,7 @@ paths:
       summary: Аутентификация пользователя
       tags:
       - auth
-  /auth/signup:
+  /auth/sign-up:
     post:
       consumes:
       - application/json
@@ -315,78 +329,6 @@ paths:
       summary: Регистрация пользователя
       tags:
       - auth
-  /deliveries:
-    get:
-      description: Возвращает все доставки текущего авторизованного пользователя
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Если доставок нет
-          schema:
-            properties:
-              message:
-                type: string
-            type: object
-        "500":
-          description: Ошибка сервера
-          schema:
-            properties:
-              error:
-                type: string
-              message:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Получение списка доставок
-      tags:
-      - deliveries
-  /deliveries/{order_id}/complete:
-    post:
-      description: Отмечает доставку как завершенную и обновляет статус водителя
-      parameters:
-      - description: ID заказа
-        in: path
-        name: order_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Успешное завершение
-          schema:
-            properties:
-              driver_id:
-                format: int64
-                type: integer
-              message:
-                type: string
-              success:
-                type: boolean
-            type: object
-        "400":
-          description: Неверный ID заказа
-          schema:
-            properties:
-              error:
-                type: string
-            type: object
-        "500":
-          description: Ошибка сервера
-          schema:
-            properties:
-              error:
-                type: string
-              message:
-                type: string
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Завершение доставки
-      tags:
-      - deliveries
   /orders:
     get:
       description: Возвращает все заказы текущего авторизованного пользователя
@@ -494,7 +436,7 @@ paths:
       summary: Получение деталей заказа
       tags:
       - orders
-  /orders/{order_id}/assign:
+  /orders/{order_id}/assign-driver:
     post:
       description: Назначает подходящего водителя на заказ и обновляет его статус
       parameters:
@@ -544,7 +486,79 @@ paths:
       summary: Назначение водителя на заказ
       tags:
       - orders
-  /warehouse/products:
+  /orders/deliveries:
+    get:
+      description: Возвращает все доставки текущего авторизованного пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Если доставок нет
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получение списка доставок
+      tags:
+      - deliveries
+  /orders/deliveries/{order_id}/complete_delivery:
+    post:
+      description: Отмечает доставку как завершенную и обновляет статус водителя
+      parameters:
+      - description: ID заказа
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное завершение
+          schema:
+            properties:
+              driver_id:
+                format: int64
+                type: integer
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: Неверный ID заказа
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Завершение доставки
+      tags:
+      - deliveries
+  /store/products:
     get:
       description: Возвращает список всех товаров доступных на складе
       produces:
@@ -571,4 +585,10 @@ paths:
       summary: Получение доступных товаров
       tags:
       - warehouse
+securityDefinitions:
+  BearerAuth:
+    description: Введите 'Bearer ' followed by your JWT token
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

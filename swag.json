@@ -1,0 +1,5 @@
+{
+  "dir": "./cmd/api-gateway,./internal/services/api-gateway/handler",
+  "output": "./docs",
+  "main": "./cmd/api-gateway/main.go"
+}

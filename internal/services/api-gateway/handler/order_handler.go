@@ -282,7 +282,7 @@ func (o *OrderHandler) GetOrderByID(c *gin.Context) {
 // @Failure 400 {object} object{error=string,message=string} "Заказ не в pending статусе"
 // @Failure 500 {object} object{error=string,message=string} "Ошибка сервера"
 // @Security ApiKeyAuth
-// @Router /orders/{order_id}/assign [post]
+// @Router /orders/{order_id}/assign-driver [post]
 func (o *OrderHandler) AssignDriver(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -377,7 +377,7 @@ func (o *OrderHandler) AssignDriver(c *gin.Context) {
 // @Success 200 {object} object{message=string} "Если доставок нет"
 // @Failure 500 {object} object{error=string,message=string} "Ошибка сервера"
 // @Security ApiKeyAuth
-// @Router /deliveries [get]
+// @Router /orders/deliveries [get]
 func (o *OrderHandler) GetDeliveries(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -418,7 +418,7 @@ func (o *OrderHandler) GetDeliveries(c *gin.Context) {
 // @Failure 400 {object} object{error=string} "Неверный ID заказа"
 // @Failure 500 {object} object{error=string,message=string} "Ошибка сервера"
 // @Security ApiKeyAuth
-// @Router /deliveries/{order_id}/complete [post]
+// @Router /orders/deliveries/{order_id}/complete_delivery [post]
 func (o *OrderHandler) CompleteOrder(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
