@@ -11,8 +11,10 @@ func ConvertStockItemsToOrderItems(stockItems []*warehousepb.StockItem) []*entit
 
 	for i, stockItem := range stockItems {
 		goodsItems[i] = &entity.GoodsItem{
+			ProductID:   stockItem.ProductId,
 			ProductName: stockItem.ProductName,
 			Quantity:    stockItem.Quantity,
+			LastUpdated: stockItem.Time,
 		}
 	}
 
@@ -24,9 +26,9 @@ func ConvertOrderItemsToStock(goodsItems []*entity.GoodsItem) []*warehousepb.Sto
 
 	for i, orderItem := range goodsItems {
 		stockItems[i] = &warehousepb.Stock{
-			ProductId:   orderItem.ProductID,
 			ProductName: orderItem.ProductName,
 			Quantity:    orderItem.Quantity,
+			Price:       orderItem.Price,
 		}
 	}
 
@@ -48,6 +50,20 @@ func ConvertOrderItemToGoodsItem(orderItem []*orderpb.OrderItem) []entity.GoodsI
 	return goodsItems
 }
 
+func ConvertOrderItemToWarehouseStockItem(orderItem []*orderpb.OrderItem, time int64) []*warehousepb.StockItem {
+	stockItems := make([]*warehousepb.StockItem, len(orderItem))
+
+	for i, item := range orderItem {
+		stockItems[i] = &warehousepb.StockItem{
+			ProductId:   item.ProductId,
+			ProductName: item.ProductName,
+			Quantity:    item.Quantity,
+			Time:        time,
+		}
+	}
+	return stockItems
+}
+
 func ConvertGoodsItemSliceToOrderItemSlice(goodsItems []entity.GoodsItem) []*orderpb.OrderItem {
 	if goodsItems == nil {
 		return nil
@@ -64,4 +80,62 @@ func ConvertGoodsItemSliceToOrderItemSlice(goodsItems []entity.GoodsItem) []*ord
 		}
 	}
 	return orderItems
+}
+
+// ConvertOrders converts a slice of orderpb.Order to a slice of entity.Order
+func ConvertOrders(pbOrders []*orderpb.Order) []*entity.Order {
+	var orders []*entity.Order
+	for _, pbOrder := range pbOrders {
+		orders = append(orders, ConvertOrder(pbOrder))
+	}
+	return orders
+}
+
+// ConvertOrder converts a single orderpb.Order to entity.Order
+func ConvertOrder(pbOrder *orderpb.Order) *entity.Order {
+	var createdAt int64
+	if pbOrder.CreatedAt != nil {
+		createdAt = pbOrder.CreatedAt.AsTime().Unix()
+	}
+
+	return &entity.Order{
+		ID:              pbOrder.Id,
+		UserID:          pbOrder.UserId,
+		Status:          entity.OrderStatus(pbOrder.Status),
+		DeliveryAddress: pbOrder.DeliveryAddress,
+		Items:           ConvertOrderItems(pbOrder.Items),
+		TotalAmount:     pbOrder.TotalAmount,
+		DriverID:        &pbOrder.DriverId,
+		CreatedAt:       createdAt,
+	}
+}
+
+// ConvertOrderItems converts a slice of orderpb.OrderItem to a slice of entity.GoodsItem
+func ConvertOrderItems(pbItems []*orderpb.OrderItem) []entity.GoodsItem {
+	var items []entity.GoodsItem
+	for _, pbItem := range pbItems {
+
+		items = append(items, entity.GoodsItem{
+			ProductID:   pbItem.ProductId,
+			ProductName: pbItem.ProductName,
+			Price:       pbItem.Price,
+			Quantity:    pbItem.Quantity,
+			TotalPrice:  pbItem.TotalPrice,
+		})
+	}
+	return items
+}
+
+func ConvertStocksToGoodsItems(stocks []*warehousepb.Stock) []*entity.GoodsItem {
+	goodsItems := make([]*entity.GoodsItem, 0, len(stocks))
+	for _, stock := range stocks {
+		goodsItem := &entity.GoodsItem{
+			ProductID:   stock.ProductId,
+			ProductName: stock.ProductName,
+			Price:       stock.Price,
+			Quantity:    stock.Quantity,
+		}
+		goodsItems = append(goodsItems, goodsItem)
+	}
+	return goodsItems
 }
