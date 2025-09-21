@@ -46,6 +46,7 @@ func main() {
 	kafkaConsumer := kafka.NewKafkaConsumer(log, orderGRPCServiceConfig.KafkaConfig)
 
 	defer kafkaConsumer.Close()
+	defer kafkaConsumer.Conn.Close()
 
 	if err := kafka.EnsureTopicExists(ctx, orderGRPCServiceConfig.KafkaConfig, log); err != nil {
 		log.Error("Failed to ensure Kafka topic exists", slogger.Err(err))

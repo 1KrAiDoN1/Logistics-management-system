@@ -43,6 +43,7 @@ func main() {
 	}
 
 	defer kafkaProducer.Close()
+	defer kafkaProducer.Conn.Close()
 
 	if err := kafka.EnsureTopicExists(ctx, driverGRPCServiceConfig.KafkaConfig, log); err != nil {
 		log.Error("Failed to ensure Kafka topic exists", slogger.Err(err))

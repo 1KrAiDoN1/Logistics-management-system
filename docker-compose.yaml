@@ -1,0 +1,225 @@
+# --- Секция сетей ---
+# Объявляем нашу собственную сеть. Это позволяет сервисам общаться друг с другом по именам.
+networks:
+  logistics-net:
+    driver: bridge
+
+# --- Секция томов ---
+# Объявляем "тома" для постоянного хранения данных.
+# Даже если мы удалим контейнеры, данные в томах сохранятся.
+volumes:
+  postgres-data:
+  redis-data:
+
+# --- Секция сервисов (контейнеров) ---
+services:
+  # 1. База данных PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: logistics_db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - logistics-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis - кэш в памяти
+  redis:
+    image: redis:7-alpine
+    container_name: logistics_redis
+    volumes:
+      - redis-data:/data # Подключаем том для хранения данных Redis
+    ports:
+      - "6379:6379"
+    networks:
+      - logistics-net
+    restart: unless-stopped
+    healthcheck: # <<-- ДОБАВЛЕНО
+      test: ["CMD", "redis-cli", "ping"] # Простая команда для проверки, отвечает ли Redis
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Zookeeper - служебный сервис для Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0 # Docker сам скачает этот образ
+    container_name: zookeeper
+    networks:
+      - logistics-net
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+
+  # 4. Kafka - брокер сообщений
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0 # Docker сам скачает этот образ
+    container_name: kafka
+    depends_on:
+      - zookeeper # Kafka запустится только после Zookeeper
+    ports:
+      - "9092:9092"
+    networks:
+      - logistics-net
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181' # Kafka находит Zookeeper по имени сервиса
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    restart: unless-stopped
+    healthcheck: # <<-- ДОБАВЛЕНО
+      # Эта утилита встроена в образ и ждет, пока брокер Kafka будет готов
+      test: ["CMD", "/bin/cub", "kafka-ready", "-b", "localhost:29092", "-n", "1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # 5. Миграции - отдельный, кратковременный контейнер
+  migrations:
+    build: . # Использует тот же Dockerfile, что и остальные сервисы
+    container_name: migrations
+    env_file:
+      - .env
+    environment:    
+      - DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy # Запустится только когда БД будет полностью готова
+    networks:
+      - logistics-net
+    volumes:
+      - ./migrations:/app/migrations # Позволяет создавать миграции с хост-машины
+    # Эта команда выполнится, и контейнер завершит свою работу.
+    command: >
+      sh -c "migrate -path /app/migrations -database $$DB_URL -verbose up"
+
+  # 6. Микросервисы вашего приложения
+  api-gateway:
+    build: .
+    ports:
+      - "9091:9091"
+    container_name: api_gateway
+    command: /app/bin/api-gateway
+    depends_on:
+      - migrations # Запускаем после миграций, чтобы схема БД уже была готова
+    networks:
+      - logistics-net
+    volumes: # <<-- ДОБАВЛЕНО
+      - ./.env:/app/.env:ro
+    restart: on-failure
+
+  auth-service:
+    build: .
+    ports:
+      - "40001:40001"
+    container_name: auth_service
+    env_file:
+      - .env 
+    environment:
+      - DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    command: /app/bin/auth-service
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes: # <<-- ДОБАВЛЕНО
+      - ./.env:/app/.env:ro
+    restart: on-failure
+  
+  driver-service:
+    build: .
+    ports:
+      - "40002:40002"
+    container_name: driver_service
+    env_file:
+      - .env 
+    environment:
+      - DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - KAFKA_BROKER=kafka:9092
+    command: sh -c "sleep 60 && /app/bin/driver-service"
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes: # <<-- ДОБАВЛЕНО
+      - ./.env:/app/.env:ro
+    restart: on-failure
+
+  order-service:
+    build: .
+    ports:
+      - "40003:40003"
+    container_name: order_service
+    env_file:
+      - .env 
+    environment:
+      - DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - KAFKA_BROKER=kafka:9092
+      - REDIS_ADDR=redis:6379
+    command: sh -c "sleep 60 && /app/bin/order-service"
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis: 
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes: # <<-- ДОБАВЛЕНО
+      - ./.env:/app/.env:ro
+    restart: on-failure
+
+  warehouse-service:
+    build: .
+    ports:
+      - "40005:40005"
+    container_name: warehouse_service
+    env_file:
+      - .env 
+    environment:
+      - DB_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    command: /app/bin/warehouse-service
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes: # <<-- ДОБАВЛЕНО
+      - ./.env:/app/.env:ro
+    restart: on-failure
