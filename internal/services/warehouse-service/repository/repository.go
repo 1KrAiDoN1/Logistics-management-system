@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"logistics/internal/shared/entity"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -110,22 +109,25 @@ func (w *WarehouseRepository) UpdateStock(ctx context.Context, items []*entity.G
 	}
 	defer tx.Rollback(ctx)
 
-	currentTime := time.Now().Unix()
-	query := `
-        UPDATE warehouse_stock 
-        SET price = $1, quantity = $2, last_updated = $3
-        WHERE product_id = $4
-    `
+	// Получаем текущие количества товаров для проверки
+	checkQuery := `SELECT quantity FROM warehouse_stock WHERE product_id = $1`
+
+	updateQuery := `UPDATE warehouse_stock SET quantity = quantity - $1, last_updated = $2 WHERE product_id = $3`
 
 	// Выполняем обновление для каждого товара в транзакции
 	for _, item := range items {
-		item.LastUpdated = currentTime
+		// Проверяем, достаточно ли товара на складе
+		var currentQuantity int
+		err := tx.QueryRow(ctx, checkQuery, item.ProductID).Scan(&currentQuantity)
+		if err != nil {
+			return fmt.Errorf("failed to get current quantity for product %d: %w", item.ProductID, err)
+		}
 
-		_, err := tx.Exec(ctx, query,
-			item.Price,
-			item.Quantity,
-			item.LastUpdated,
-			item.ProductID,
+		// Вычитаем количество заказанного товара
+		_, err = tx.Exec(ctx, updateQuery,
+			item.Quantity,    // количество для вычитания
+			item.LastUpdated, // время обновления
+			item.ProductID,   // ID товара
 		)
 		if err != nil {
 			return fmt.Errorf("failed to update stock for product %d: %w", item.ProductID, err)

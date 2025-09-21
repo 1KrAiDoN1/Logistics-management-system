@@ -26,7 +26,7 @@ const (
 	OrderService_GetOrdersByUser_FullMethodName   = "/order.OrderService/GetOrdersByUser"
 	OrderService_CompleteDelivery_FullMethodName  = "/order.OrderService/CompleteDelivery"
 	OrderService_GetDeliveries_FullMethodName     = "/order.OrderService/GetDeliveries"
-	OrderService_GetOrderItemPrice_FullMethodName = "/order.OrderService/GetOrderItemPrice"
+	OrderService_GetOrderItemInfo_FullMethodName  = "/order.OrderService/GetOrderItemInfo"
 	OrderService_CheckOrderStatus_FullMethodName  = "/order.OrderService/CheckOrderStatus"
 )
 
@@ -43,7 +43,7 @@ type OrderServiceClient interface {
 	GetOrdersByUser(ctx context.Context, in *GetOrdersByUserRequest, opts ...grpc.CallOption) (*GetOrdersByUserResponse, error)
 	CompleteDelivery(ctx context.Context, in *CompleteDeliveryRequest, opts ...grpc.CallOption) (*CompleteDeliveryResponse, error)
 	GetDeliveries(ctx context.Context, in *GetDeliveriesByUserRequest, opts ...grpc.CallOption) (*GetDeliveriesByUserResponse, error)
-	GetOrderItemPrice(ctx context.Context, in *GetOrderItemPriceRequest, opts ...grpc.CallOption) (*GetOrderItemPriceResponse, error)
+	GetOrderItemInfo(ctx context.Context, in *GetOrderItemInfoRequest, opts ...grpc.CallOption) (*GetOrderItemInfoResponse, error)
 	CheckOrderStatus(ctx context.Context, in *CheckOrderStatusRequest, opts ...grpc.CallOption) (*CheckOrderStatusResponse, error)
 }
 
@@ -125,10 +125,10 @@ func (c *orderServiceClient) GetDeliveries(ctx context.Context, in *GetDeliverie
 	return out, nil
 }
 
-func (c *orderServiceClient) GetOrderItemPrice(ctx context.Context, in *GetOrderItemPriceRequest, opts ...grpc.CallOption) (*GetOrderItemPriceResponse, error) {
+func (c *orderServiceClient) GetOrderItemInfo(ctx context.Context, in *GetOrderItemInfoRequest, opts ...grpc.CallOption) (*GetOrderItemInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetOrderItemPriceResponse)
-	err := c.cc.Invoke(ctx, OrderService_GetOrderItemPrice_FullMethodName, in, out, cOpts...)
+	out := new(GetOrderItemInfoResponse)
+	err := c.cc.Invoke(ctx, OrderService_GetOrderItemInfo_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ type OrderServiceServer interface {
 	GetOrdersByUser(context.Context, *GetOrdersByUserRequest) (*GetOrdersByUserResponse, error)
 	CompleteDelivery(context.Context, *CompleteDeliveryRequest) (*CompleteDeliveryResponse, error)
 	GetDeliveries(context.Context, *GetDeliveriesByUserRequest) (*GetDeliveriesByUserResponse, error)
-	GetOrderItemPrice(context.Context, *GetOrderItemPriceRequest) (*GetOrderItemPriceResponse, error)
+	GetOrderItemInfo(context.Context, *GetOrderItemInfoRequest) (*GetOrderItemInfoResponse, error)
 	CheckOrderStatus(context.Context, *CheckOrderStatusRequest) (*CheckOrderStatusResponse, error)
 	mustEmbedUnimplementedOrderServiceServer()
 }
@@ -191,8 +191,8 @@ func (UnimplementedOrderServiceServer) CompleteDelivery(context.Context, *Comple
 func (UnimplementedOrderServiceServer) GetDeliveries(context.Context, *GetDeliveriesByUserRequest) (*GetDeliveriesByUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDeliveries not implemented")
 }
-func (UnimplementedOrderServiceServer) GetOrderItemPrice(context.Context, *GetOrderItemPriceRequest) (*GetOrderItemPriceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOrderItemPrice not implemented")
+func (UnimplementedOrderServiceServer) GetOrderItemInfo(context.Context, *GetOrderItemInfoRequest) (*GetOrderItemInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrderItemInfo not implemented")
 }
 func (UnimplementedOrderServiceServer) CheckOrderStatus(context.Context, *CheckOrderStatusRequest) (*CheckOrderStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckOrderStatus not implemented")
@@ -344,20 +344,20 @@ func _OrderService_GetDeliveries_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrderService_GetOrderItemPrice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetOrderItemPriceRequest)
+func _OrderService_GetOrderItemInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrderItemInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OrderServiceServer).GetOrderItemPrice(ctx, in)
+		return srv.(OrderServiceServer).GetOrderItemInfo(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: OrderService_GetOrderItemPrice_FullMethodName,
+		FullMethod: OrderService_GetOrderItemInfo_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrderServiceServer).GetOrderItemPrice(ctx, req.(*GetOrderItemPriceRequest))
+		return srv.(OrderServiceServer).GetOrderItemInfo(ctx, req.(*GetOrderItemInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -416,8 +416,8 @@ var OrderService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OrderService_GetDeliveries_Handler,
 		},
 		{
-			MethodName: "GetOrderItemPrice",
-			Handler:    _OrderService_GetOrderItemPrice_Handler,
+			MethodName: "GetOrderItemInfo",
+			Handler:    _OrderService_GetOrderItemInfo_Handler,
 		},
 		{
 			MethodName: "CheckOrderStatus",

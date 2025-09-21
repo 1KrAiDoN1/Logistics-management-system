@@ -1,6 +1,6 @@
 include .env
 export $(shell sed 's/=.*//' .env)
-
+COMPOSE_CMD = docker-compose
 DB_URL = postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}?sslmode=disable
 
 
@@ -58,3 +58,26 @@ migrate-all-down:
 	migrate -path ./migrations -database "${DB_URL}" down
 
 
+build:
+  @echo "Сборка Docker-образов..."
+  $(COMPOSE_CMD) build
+
+up:
+  @echo "Запуск всех сервисов..."
+  $(COMPOSE_CMD) up 
+
+down: 
+  @echo "Остановка и удаление контейнеров..."
+  $(COMPOSE_CMD) down
+
+logs: 
+  @echo "Отслеживание логов..."
+  $(COMPOSE_CMD) logs -f $(service)
+
+ps: 
+  @echo "Текущий статус контейнеров:"
+  $(COMPOSE_CMD) ps
+
+clean:
+  @echo "ВНИМАНИЕ: Удаление всех контейнеров, сетей и данных..."
+  $(COMPOSE_CMD) down -v

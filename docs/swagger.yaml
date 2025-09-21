@@ -1,0 +1,594 @@
+basePath: /api/v1
+definitions:
+  dto.AuthResponse:
+    description: Ответ с токеном доступа и информацией о пользователе
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserInfo'
+    type: object
+  dto.CreateOrderItem:
+    properties:
+      product_name:
+        example: Ноутбук
+        type: string
+      quantity:
+        example: 1
+        minimum: 1
+        type: integer
+    required:
+    - product_name
+    - quantity
+    type: object
+  dto.CreateOrderRequest:
+    description: Запрос на создание нового заказа
+    properties:
+      delivery_address:
+        example: ул. Пушкина, д. 10
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/dto.CreateOrderItem'
+        minItems: 1
+        type: array
+      user_id:
+        example: 123
+        type: integer
+    required:
+    - delivery_address
+    - items
+    - user_id
+    type: object
+  dto.CreateOrderResponse:
+    description: Ответ после успешного создания заказа
+    properties:
+      message:
+        example: Order created successfully
+        type: string
+      order:
+        $ref: '#/definitions/entity.Order'
+    type: object
+  dto.LoginRequest:
+    description: Запрос на аутентификацию пользователя
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.RegisterRequest:
+    description: Запрос на регистрацию нового пользователя
+    properties:
+      confirm_password:
+        example: password123
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      first_name:
+        example: John
+        maxLength: 50
+        minLength: 2
+        type: string
+      last_name:
+        example: Doe
+        maxLength: 50
+        minLength: 2
+        type: string
+      password:
+        example: password123
+        maxLength: 100
+        minLength: 8
+        type: string
+    required:
+    - confirm_password
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  dto.UserInfo:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      first_name:
+        example: John
+        type: string
+      id:
+        example: 1
+        type: integer
+      last_name:
+        example: Doe
+        type: string
+    type: object
+  entity.GoodsItem:
+    description: Товар в составе заказа
+    properties:
+      last_updated:
+        example: 1694966400
+        type: integer
+      price:
+        example: 15000
+        type: number
+      product_id:
+        example: 789
+        type: integer
+      product_name:
+        example: Ноутбук
+        type: string
+      quantity:
+        example: 1
+        type: integer
+      total_price:
+        example: 15000
+        type: number
+    type: object
+  entity.Order:
+    description: Информация о заказе
+    properties:
+      created_at:
+        example: 1694966400
+        type: integer
+      delivery_address:
+        example: ул. Пушкина, д. 10
+        type: string
+      driver_id:
+        example: 456
+        type: integer
+      id:
+        example: 1
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/entity.GoodsItem'
+        type: array
+      status:
+        allOf:
+        - $ref: '#/definitions/entity.OrderStatus'
+        example: pending
+      total_amount:
+        example: 15000.5
+        type: number
+      user_id:
+        example: 123
+        type: integer
+    type: object
+  entity.OrderStatus:
+    enum:
+    - pending
+    - confirmed
+    - route_ready
+    - assigned
+    - in_progress
+    - delivered
+    - cancelled
+    - failed
+    type: string
+    x-enum-comments:
+      StatusAssigned: водитель назначен
+      StatusCancelled: отменен
+      StatusConfirmed: товар зарезервирован
+      StatusDelivered: доставлен
+      StatusFailed: ошибка
+      StatusInProgress: в пути
+      StatusPending: создан, ждет проверки склада
+      StatusRouteReady: маршрут построен
+    x-enum-descriptions:
+    - создан, ждет проверки склада
+    - товар зарезервирован
+    - маршрут построен
+    - водитель назначен
+    - в пути
+    - доставлен
+    - отменен
+    - ошибка
+    x-enum-varnames:
+    - StatusPending
+    - StatusConfirmed
+    - StatusRouteReady
+    - StatusAssigned
+    - StatusInProgress
+    - StatusDelivered
+    - StatusCancelled
+    - StatusFailed
+host: localhost:9091
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API для управления логистическими операциями включая аутентификацию,
+    заказы, доставки и управление складом, построенный на базе нескольких микросервисов
+    с использованием gRPC и REST.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Logistics Management API
+  version: "1.0"
+paths:
+  /auth/logout:
+    post:
+      description: Выполняет выход пользователя и удаляет refresh token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Выход из системы
+      tags:
+      - auth
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Выполняет вход пользователя и возвращает токены
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Некорректные данные
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Неверные учетные данные
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Аутентификация пользователя
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Создает нового пользователя в системе
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешная регистрация
+          schema:
+            properties:
+              email:
+                type: string
+              first_name:
+                type: string
+              last_name:
+                type: string
+              user_id:
+                format: int64
+                type: integer
+            type: object
+        "400":
+          description: Некорректные данные
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Регистрация пользователя
+      tags:
+      - auth
+  /orders:
+    get:
+      description: Возвращает все заказы текущего авторизованного пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный ответ
+          schema:
+            properties:
+              orders:
+                items:
+                  $ref: '#/definitions/entity.Order'
+                type: array
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получение списка заказов пользователя
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Создает новый заказ после проверки наличия товаров на складе
+      parameters:
+      - description: Данные для создания заказа
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateOrderResponse'
+        "400":
+          description: Некорректные данные или товара нет в наличии
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Создание нового заказа
+      tags:
+      - orders
+  /orders/{order_id}:
+    get:
+      description: Возвращает детальную информацию о конкретном заказе пользователя
+      parameters:
+      - description: ID заказа
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Детали заказа
+          schema:
+            $ref: '#/definitions/entity.Order'
+        "400":
+          description: Неверный ID заказа
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получение деталей заказа
+      tags:
+      - orders
+  /orders/{order_id}/assign-driver:
+    post:
+      description: Назначает подходящего водителя на заказ и обновляет его статус
+      parameters:
+      - description: ID заказа
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное назначение
+          schema:
+            properties:
+              driver_id:
+                format: int64
+                type: integer
+              message:
+                type: string
+              order_id:
+                format: int64
+                type: integer
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: Заказ не в pending статусе
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Назначение водителя на заказ
+      tags:
+      - orders
+  /orders/deliveries:
+    get:
+      description: Возвращает все доставки текущего авторизованного пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Если доставок нет
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Получение списка доставок
+      tags:
+      - deliveries
+  /orders/deliveries/{order_id}/complete_delivery:
+    post:
+      description: Отмечает доставку как завершенную и обновляет статус водителя
+      parameters:
+      - description: ID заказа
+        in: path
+        name: order_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешное завершение
+          schema:
+            properties:
+              driver_id:
+                format: int64
+                type: integer
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        "400":
+          description: Неверный ID заказа
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Завершение доставки
+      tags:
+      - deliveries
+  /store/products:
+    get:
+      description: Возвращает список всех товаров доступных на складе
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список товаров
+          schema:
+            properties:
+              message:
+                type: string
+              products:
+                items:
+                  $ref: '#/definitions/entity.GoodsItem'
+                type: array
+            type: object
+        "500":
+          description: Ошибка сервера
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Получение доступных товаров
+      tags:
+      - warehouse
+securityDefinitions:
+  BearerAuth:
+    description: Введите 'Bearer ' followed by your JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

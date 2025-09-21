@@ -53,7 +53,7 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, order *entity.Order) 
 				item.Price,
 				item.Quantity,
 				item.TotalPrice,
-				item.LastUpdated,
+				order.CreatedAt,
 			)
 		}
 
@@ -71,13 +71,14 @@ func (o *OrderRepository) CreateOrder(ctx context.Context, order *entity.Order) 
 
 }
 
-func (o *OrderRepository) CompleteDelivery(ctx context.Context, userID, orderID int64) error {
-	query := `UPDATE orders SET status = 'delivered' WHERE id = $1 AND user_id = $2`
-	_, err := o.pool.Exec(ctx, query, orderID, userID)
+func (o *OrderRepository) CompleteDelivery(ctx context.Context, userID, orderID int64) (int64, error) {
+	query := `UPDATE orders SET status = 'delivered' WHERE id = $1 AND user_id = $2 RETURNING driver_id`
+	var driverID int64
+	err := o.pool.QueryRow(ctx, query, orderID, userID).Scan(&driverID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return driverID, nil
 }
 
 func (o *OrderRepository) CheckDeliveryStatus(ctx context.Context, userID, orderID int64) (string, error) {
@@ -112,14 +113,15 @@ func (o *OrderRepository) GetDeliveriesByUser(ctx context.Context, userID int64)
 	return orders, nil
 }
 
-func (o *OrderRepository) GetOrderItemPrice(ctx context.Context, productName string) (float64, error) {
-	query := `SELECT price FROM warehouse_stock WHERE product_name = $1`
+func (o *OrderRepository) GetOrderItemInfo(ctx context.Context, productName string) (int32, float64, error) {
+	query := `SELECT product_id, price FROM warehouse_stock WHERE product_name = $1`
+	var product_id int32
 	var price float64
-	err := o.pool.QueryRow(ctx, query, productName).Scan(&price)
+	err := o.pool.QueryRow(ctx, query, productName).Scan(&product_id, &price)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
-	return price, nil
+	return product_id, price, nil
 }
 
 func (o *OrderRepository) GetOrderDetails(ctx context.Context, userID, orderID int64) (*entity.Order, error) {

@@ -28,6 +28,7 @@ type CreateOrderRequest struct {
 	UserId          int64                  `protobuf:"varint,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	DeliveryAddress string                 `protobuf:"bytes,2,opt,name=delivery_address,json=deliveryAddress,proto3" json:"delivery_address,omitempty"`
 	Items           []*OrderItem           `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	Time            int64                  `protobuf:"varint,4,opt,name=time,proto3" json:"time,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -81,6 +82,13 @@ func (x *CreateOrderRequest) GetItems() []*OrderItem {
 		return x.Items
 	}
 	return nil
+}
+
+func (x *CreateOrderRequest) GetTime() int64 {
+	if x != nil {
+		return x.Time
+	}
+	return 0
 }
 
 type CheckOrderStatusRequest struct {
@@ -523,27 +531,27 @@ func (x *GetOrderDetailsRequest) GetOrderId() int64 {
 	return 0
 }
 
-type GetOrderItemPriceRequest struct {
+type GetOrderItemInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ProductName   string                 `protobuf:"bytes,1,opt,name=product_name,json=productName,proto3" json:"product_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetOrderItemPriceRequest) Reset() {
-	*x = GetOrderItemPriceRequest{}
+func (x *GetOrderItemInfoRequest) Reset() {
+	*x = GetOrderItemInfoRequest{}
 	mi := &file_order_service_order_service_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetOrderItemPriceRequest) String() string {
+func (x *GetOrderItemInfoRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetOrderItemPriceRequest) ProtoMessage() {}
+func (*GetOrderItemInfoRequest) ProtoMessage() {}
 
-func (x *GetOrderItemPriceRequest) ProtoReflect() protoreflect.Message {
+func (x *GetOrderItemInfoRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_order_service_order_service_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -555,39 +563,40 @@ func (x *GetOrderItemPriceRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetOrderItemPriceRequest.ProtoReflect.Descriptor instead.
-func (*GetOrderItemPriceRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetOrderItemInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetOrderItemInfoRequest) Descriptor() ([]byte, []int) {
 	return file_order_service_order_service_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *GetOrderItemPriceRequest) GetProductName() string {
+func (x *GetOrderItemInfoRequest) GetProductName() string {
 	if x != nil {
 		return x.ProductName
 	}
 	return ""
 }
 
-type GetOrderItemPriceResponse struct {
+type GetOrderItemInfoResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Price         float64                `protobuf:"fixed64,1,opt,name=price,proto3" json:"price,omitempty"`
+	ProductId     int64                  `protobuf:"varint,1,opt,name=product_id,json=productId,proto3" json:"product_id,omitempty"`
+	Price         float64                `protobuf:"fixed64,2,opt,name=price,proto3" json:"price,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetOrderItemPriceResponse) Reset() {
-	*x = GetOrderItemPriceResponse{}
+func (x *GetOrderItemInfoResponse) Reset() {
+	*x = GetOrderItemInfoResponse{}
 	mi := &file_order_service_order_service_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetOrderItemPriceResponse) String() string {
+func (x *GetOrderItemInfoResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetOrderItemPriceResponse) ProtoMessage() {}
+func (*GetOrderItemInfoResponse) ProtoMessage() {}
 
-func (x *GetOrderItemPriceResponse) ProtoReflect() protoreflect.Message {
+func (x *GetOrderItemInfoResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_order_service_order_service_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -599,12 +608,19 @@ func (x *GetOrderItemPriceResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetOrderItemPriceResponse.ProtoReflect.Descriptor instead.
-func (*GetOrderItemPriceResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetOrderItemInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetOrderItemInfoResponse) Descriptor() ([]byte, []int) {
 	return file_order_service_order_service_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *GetOrderItemPriceResponse) GetPrice() float64 {
+func (x *GetOrderItemInfoResponse) GetProductId() int64 {
+	if x != nil {
+		return x.ProductId
+	}
+	return 0
+}
+
+func (x *GetOrderItemInfoResponse) GetPrice() float64 {
 	if x != nil {
 		return x.Price
 	}
@@ -710,7 +726,8 @@ func (x *CompleteDeliveryRequest) GetOrderId() int64 {
 type CompleteDeliveryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	DriverId      int64                  `protobuf:"varint,2,opt,name=driver_id,json=driverId,proto3" json:"driver_id,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -750,6 +767,13 @@ func (x *CompleteDeliveryResponse) GetSuccess() bool {
 		return x.Success
 	}
 	return false
+}
+
+func (x *CompleteDeliveryResponse) GetDriverId() int64 {
+	if x != nil {
+		return x.DriverId
+	}
+	return 0
 }
 
 func (x *CompleteDeliveryResponse) GetMessage() string {
@@ -1124,11 +1148,12 @@ var File_order_service_order_service_proto protoreflect.FileDescriptor
 
 const file_order_service_order_service_proto_rawDesc = "" +
 	"\n" +
-	"!order_service/order_service.proto\x12\x05order\x1a\x1fgoogle/protobuf/timestamp.proto\"\x80\x01\n" +
+	"!order_service/order_service.proto\x12\x05order\x1a\x1fgoogle/protobuf/timestamp.proto\"\x94\x01\n" +
 	"\x12CreateOrderRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12)\n" +
 	"\x10delivery_address\x18\x02 \x01(\tR\x0fdeliveryAddress\x12&\n" +
-	"\x05items\x18\x03 \x03(\v2\x10.order.OrderItemR\x05items\"M\n" +
+	"\x05items\x18\x03 \x03(\v2\x10.order.OrderItemR\x05items\x12\x12\n" +
+	"\x04time\x18\x04 \x01(\x03R\x04time\"M\n" +
 	"\x17CheckOrderStatusRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x19\n" +
 	"\border_id\x18\x02 \x01(\x03R\aorderId\"2\n" +
@@ -1155,19 +1180,22 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"\amessage\x18\x04 \x01(\tR\amessage\"L\n" +
 	"\x16GetOrderDetailsRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\x03R\aorderId\"=\n" +
-	"\x18GetOrderItemPriceRequest\x12!\n" +
-	"\fproduct_name\x18\x01 \x01(\tR\vproductName\"1\n" +
-	"\x19GetOrderItemPriceResponse\x12\x14\n" +
-	"\x05price\x18\x01 \x01(\x01R\x05price\"=\n" +
+	"\border_id\x18\x02 \x01(\x03R\aorderId\"<\n" +
+	"\x17GetOrderItemInfoRequest\x12!\n" +
+	"\fproduct_name\x18\x01 \x01(\tR\vproductName\"O\n" +
+	"\x18GetOrderItemInfoResponse\x12\x1d\n" +
+	"\n" +
+	"product_id\x18\x01 \x01(\x03R\tproductId\x12\x14\n" +
+	"\x05price\x18\x02 \x01(\x01R\x05price\"=\n" +
 	"\x17GetOrderDetailsResponse\x12\"\n" +
 	"\x05order\x18\x01 \x01(\v2\f.order.OrderR\x05order\"M\n" +
 	"\x17CompleteDeliveryRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x19\n" +
-	"\border_id\x18\x02 \x01(\x03R\aorderId\"N\n" +
+	"\border_id\x18\x02 \x01(\x03R\aorderId\"k\n" +
 	"\x18CompleteDeliveryResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"1\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1b\n" +
+	"\tdriver_id\x18\x02 \x01(\x03R\bdriverId\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\"1\n" +
 	"\x16GetOrdersByUserRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"?\n" +
 	"\x17GetOrdersByUserResponse\x12$\n" +
@@ -1196,7 +1224,7 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"\x1bGetDeliveriesByUserResponse\x12,\n" +
 	"\n" +
 	"deliveries\x18\x01 \x03(\v2\f.order.OrderR\n" +
-	"deliveries2\xf3\x05\n" +
+	"deliveries2\xf0\x05\n" +
 	"\fOrderService\x12D\n" +
 	"\vCreateOrder\x12\x19.order.CreateOrderRequest\x1a\x1a.order.CreateOrderResponse\x12V\n" +
 	"\x11UpdateOrderStatus\x12\x1f.order.UpdateOrderStatusRequest\x1a .order.UpdateOrderStatusResponse\x12G\n" +
@@ -1204,8 +1232,8 @@ const file_order_service_order_service_proto_rawDesc = "" +
 	"\x0fGetOrderDetails\x12\x1d.order.GetOrderDetailsRequest\x1a\x1e.order.GetOrderDetailsResponse\x12P\n" +
 	"\x0fGetOrdersByUser\x12\x1d.order.GetOrdersByUserRequest\x1a\x1e.order.GetOrdersByUserResponse\x12S\n" +
 	"\x10CompleteDelivery\x12\x1e.order.CompleteDeliveryRequest\x1a\x1f.order.CompleteDeliveryResponse\x12V\n" +
-	"\rGetDeliveries\x12!.order.GetDeliveriesByUserRequest\x1a\".order.GetDeliveriesByUserResponse\x12V\n" +
-	"\x11GetOrderItemPrice\x12\x1f.order.GetOrderItemPriceRequest\x1a .order.GetOrderItemPriceResponse\x12S\n" +
+	"\rGetDeliveries\x12!.order.GetDeliveriesByUserRequest\x1a\".order.GetDeliveriesByUserResponse\x12S\n" +
+	"\x10GetOrderItemInfo\x12\x1e.order.GetOrderItemInfoRequest\x1a\x1f.order.GetOrderItemInfoResponse\x12S\n" +
 	"\x10CheckOrderStatus\x12\x1e.order.CheckOrderStatusRequest\x1a\x1f.order.CheckOrderStatusResponseB\bZ\x06/orderb\x06proto3"
 
 var (
@@ -1231,8 +1259,8 @@ var file_order_service_order_service_proto_goTypes = []any{
 	(*AssignDriverRequest)(nil),         // 6: order.AssignDriverRequest
 	(*AssignDriverResponse)(nil),        // 7: order.AssignDriverResponse
 	(*GetOrderDetailsRequest)(nil),      // 8: order.GetOrderDetailsRequest
-	(*GetOrderItemPriceRequest)(nil),    // 9: order.GetOrderItemPriceRequest
-	(*GetOrderItemPriceResponse)(nil),   // 10: order.GetOrderItemPriceResponse
+	(*GetOrderItemInfoRequest)(nil),     // 9: order.GetOrderItemInfoRequest
+	(*GetOrderItemInfoResponse)(nil),    // 10: order.GetOrderItemInfoResponse
 	(*GetOrderDetailsResponse)(nil),     // 11: order.GetOrderDetailsResponse
 	(*CompleteDeliveryRequest)(nil),     // 12: order.CompleteDeliveryRequest
 	(*CompleteDeliveryResponse)(nil),    // 13: order.CompleteDeliveryResponse
@@ -1259,7 +1287,7 @@ var file_order_service_order_service_proto_depIdxs = []int32{
 	14, // 11: order.OrderService.GetOrdersByUser:input_type -> order.GetOrdersByUserRequest
 	12, // 12: order.OrderService.CompleteDelivery:input_type -> order.CompleteDeliveryRequest
 	18, // 13: order.OrderService.GetDeliveries:input_type -> order.GetDeliveriesByUserRequest
-	9,  // 14: order.OrderService.GetOrderItemPrice:input_type -> order.GetOrderItemPriceRequest
+	9,  // 14: order.OrderService.GetOrderItemInfo:input_type -> order.GetOrderItemInfoRequest
 	1,  // 15: order.OrderService.CheckOrderStatus:input_type -> order.CheckOrderStatusRequest
 	3,  // 16: order.OrderService.CreateOrder:output_type -> order.CreateOrderResponse
 	5,  // 17: order.OrderService.UpdateOrderStatus:output_type -> order.UpdateOrderStatusResponse
@@ -1268,7 +1296,7 @@ var file_order_service_order_service_proto_depIdxs = []int32{
 	15, // 20: order.OrderService.GetOrdersByUser:output_type -> order.GetOrdersByUserResponse
 	13, // 21: order.OrderService.CompleteDelivery:output_type -> order.CompleteDeliveryResponse
 	19, // 22: order.OrderService.GetDeliveries:output_type -> order.GetDeliveriesByUserResponse
-	10, // 23: order.OrderService.GetOrderItemPrice:output_type -> order.GetOrderItemPriceResponse
+	10, // 23: order.OrderService.GetOrderItemInfo:output_type -> order.GetOrderItemInfoResponse
 	2,  // 24: order.OrderService.CheckOrderStatus:output_type -> order.CheckOrderStatusResponse
 	16, // [16:25] is the sub-list for method output_type
 	7,  // [7:16] is the sub-list for method input_type

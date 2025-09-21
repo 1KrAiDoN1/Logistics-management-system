@@ -11,10 +11,12 @@ func SetupAuthRoutes(router *gin.RouterGroup, authHandler handler.AuthHandlerInt
 	{
 		auth.POST("/sign-up", authHandler.SignUp)
 		auth.POST("/sign-in", authHandler.SignIn)
-		auth.POST("/logout", authHandler.Logout)
 	}
 }
 
+func SetupLogoutRoute(router *gin.RouterGroup, authHandler handler.AuthHandlerInterface) {
+	router.POST("/logout", authHandler.Logout)
+}
 func SetupOrderRoutes(router *gin.RouterGroup, orderHandler handler.OrderHandlerInterface) {
 	orders := router.Group("/orders")
 	{

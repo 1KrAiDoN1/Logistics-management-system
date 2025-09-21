@@ -1,0 +1,182 @@
+
+networks:
+  logistics-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: logistics_db
+    env_file:
+      - .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - logistics-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: logistics_redis
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - logistics-net
+    restart: unless-stopped
+    healthcheck: 
+      test: ["CMD", "redis-cli", "ping"] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0 
+    container_name: zookeeper
+    networks:
+      - logistics-net
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    networks:
+      - logistics-net
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1 
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 20s
+
+  migrations:
+    build: . 
+    container_name: migrations
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes:
+      - ./migrations:/app/migrations 
+    command: >
+      sh -c "migrate -path /app/migrations -database $$DB_URL -verbose up"
+
+  api-gateway:
+    build: .
+    ports:
+      - "9091:9091"
+    container_name: api_gateway
+    command: /app/bin/api-gateway
+    depends_on:
+      - migrations 
+    networks:
+      - logistics-net
+    volumes: 
+      - ./.env:/app/.env:ro
+    restart: on-failure
+
+  auth-service:
+    build: .
+    ports:
+      - "40001:40001"
+    container_name: auth_service
+    env_file:
+      - .env 
+    command: /app/bin/auth-service
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes: 
+      - ./.env:/app/.env:ro
+    restart: on-failure
+  
+  driver-service:
+    build: .
+    ports:
+      - "40002:40002"
+    container_name: driver_service
+    env_file:
+      - .env 
+    command: /app/bin/driver-service
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes:
+      - ./.env:/app/.env:ro
+    restart: on-failure
+
+  order-service:
+    build: .
+    ports:
+      - "40003:40003"
+    container_name: order_service
+    env_file:
+      - .env 
+    command: /app/bin/order-service
+    depends_on:
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis: 
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes: 
+      - ./.env:/app/.env:ro
+    restart: on-failure
+
+  warehouse-service:
+    build: .
+    ports:
+      - "40005:40005"
+    container_name: warehouse_service
+    env_file:
+      - .env 
+    command: /app/bin/warehouse-service
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - logistics-net
+    volumes:
+      - ./.env:/app/.env:ro
+    restart: on-failure

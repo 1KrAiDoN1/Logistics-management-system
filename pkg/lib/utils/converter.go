@@ -11,8 +11,10 @@ func ConvertStockItemsToOrderItems(stockItems []*warehousepb.StockItem) []*entit
 
 	for i, stockItem := range stockItems {
 		goodsItems[i] = &entity.GoodsItem{
+			ProductID:   stockItem.ProductId,
 			ProductName: stockItem.ProductName,
 			Quantity:    stockItem.Quantity,
+			LastUpdated: stockItem.Time,
 		}
 	}
 
@@ -24,9 +26,9 @@ func ConvertOrderItemsToStock(goodsItems []*entity.GoodsItem) []*warehousepb.Sto
 
 	for i, orderItem := range goodsItems {
 		stockItems[i] = &warehousepb.Stock{
-			ProductId:   orderItem.ProductID,
 			ProductName: orderItem.ProductName,
 			Quantity:    orderItem.Quantity,
+			Price:       orderItem.Price,
 		}
 	}
 
@@ -46,6 +48,20 @@ func ConvertOrderItemToGoodsItem(orderItem []*orderpb.OrderItem) []entity.GoodsI
 		}
 	}
 	return goodsItems
+}
+
+func ConvertOrderItemToWarehouseStockItem(orderItem []*orderpb.OrderItem, time int64) []*warehousepb.StockItem {
+	stockItems := make([]*warehousepb.StockItem, len(orderItem))
+
+	for i, item := range orderItem {
+		stockItems[i] = &warehousepb.StockItem{
+			ProductId:   item.ProductId,
+			ProductName: item.ProductName,
+			Quantity:    item.Quantity,
+			Time:        time,
+		}
+	}
+	return stockItems
 }
 
 func ConvertGoodsItemSliceToOrderItemSlice(goodsItems []entity.GoodsItem) []*orderpb.OrderItem {
