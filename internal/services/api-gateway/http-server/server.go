@@ -132,6 +132,7 @@ func (s *Server) setupRoutes() {
 	protected := api.Group("")
 	protected.Use(middleware.AuthMiddleware(s.authGRPCClient))
 	{
+		routes.SetupLogoutRoute(protected, s.handlers.AuthHandlerInterface)
 		routes.SetupOrderRoutes(protected, s.handlers.OrderHandlerInterface)
 		routes.SetupWarehouseRoutes(protected, s.handlers.WarehouseHandlerInterface)
 	}
